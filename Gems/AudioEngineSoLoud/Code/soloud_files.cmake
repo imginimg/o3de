@@ -1,0 +1,97 @@
+#
+# Copyright (c) Contributors to the Open 3D Engine Project.
+# For complete copyright and license terms please see the LICENSE at the root of this distribution.
+#
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+#
+
+set(FILES
+    Source/soloud/include/soloud.h
+    Source/soloud/include/soloud_audiosource.h
+    Source/soloud/include/soloud_ay.h
+    Source/soloud/include/soloud_bassboostfilter.h
+    Source/soloud/include/soloud_biquadresonantfilter.h
+    Source/soloud/include/soloud_bus.h
+    Source/soloud/include/soloud_c.h
+    Source/soloud/include/soloud_dcremovalfilter.h
+    Source/soloud/include/soloud_echofilter.h
+    Source/soloud/include/soloud_eqfilter.h
+    Source/soloud/include/soloud_error.h
+    Source/soloud/include/soloud_fader.h
+    Source/soloud/include/soloud_fft.h
+    Source/soloud/include/soloud_fftfilter.h
+    Source/soloud/include/soloud_file.h
+    Source/soloud/include/soloud_file_hack_off.h
+    Source/soloud/include/soloud_file_hack_on.h
+    Source/soloud/include/soloud_filter.h
+    Source/soloud/include/soloud_flangerfilter.h
+    Source/soloud/include/soloud_freeverbfilter.h
+    Source/soloud/include/soloud_internal.h
+    Source/soloud/include/soloud_lofifilter.h
+    Source/soloud/include/soloud_misc.h
+    Source/soloud/include/soloud_monotone.h
+    Source/soloud/include/soloud_noise.h
+    Source/soloud/include/soloud_openmpt.h
+    Source/soloud/include/soloud_queue.h
+    Source/soloud/include/soloud_robotizefilter.h
+    Source/soloud/include/soloud_sfxr.h
+    Source/soloud/include/soloud_speech.h
+    Source/soloud/include/soloud_tedsid.h
+    Source/soloud/include/soloud_thread.h
+    Source/soloud/include/soloud_vic.h
+    Source/soloud/include/soloud_vizsn.h
+    Source/soloud/include/soloud_wav.h
+    Source/soloud/include/soloud_waveshaperfilter.h
+    Source/soloud/include/soloud_wavstream.h
+    Source/soloud/include/zx7decompress.h
+
+    Source/soloud/src/core/soloud.cpp
+    Source/soloud/src/core/soloud_audiosource.cpp
+    Source/soloud/src/core/soloud_bus.cpp
+    Source/soloud/src/core/soloud_core_3d.cpp
+    Source/soloud/src/core/soloud_core_basicops.cpp
+    Source/soloud/src/core/soloud_core_faderops.cpp
+    Source/soloud/src/core/soloud_core_filterops.cpp
+    Source/soloud/src/core/soloud_core_getters.cpp
+    Source/soloud/src/core/soloud_core_setters.cpp
+    Source/soloud/src/core/soloud_core_voicegroup.cpp
+    Source/soloud/src/core/soloud_core_voiceops.cpp
+    Source/soloud/src/core/soloud_fader.cpp
+    Source/soloud/src/core/soloud_fft.cpp
+    Source/soloud/src/core/soloud_fft_lut.cpp
+    Source/soloud/src/core/soloud_file.cpp
+    Source/soloud/src/core/soloud_filter.cpp
+    Source/soloud/src/core/soloud_misc.cpp
+    Source/soloud/src/core/soloud_queue.cpp
+    Source/soloud/src/core/soloud_thread.cpp
+
+
+    Source/soloud/src/backend/alsa/soloud_alsa.cpp
+    Source/soloud/src/backend/coreaudio/soloud_coreaudio.cpp
+    Source/soloud/src/backend/opensles/soloud_opensles.cpp
+    Source/soloud/src/backend/oss/soloud_oss.cpp
+    Source/soloud/src/backend/wasapi/soloud_wasapi.cpp
+    Source/soloud/src/backend/xaudio2/soloud_xaudio2.cpp
+    Source/soloud/src/backend/winmm/soloud_winmm.cpp
+
+    Source/soloud/src/audiosource/wav/dr_flac.h
+    Source/soloud/src/audiosource/wav/dr_impl.cpp
+    Source/soloud/src/audiosource/wav/dr_mp3.h
+    Source/soloud/src/audiosource/wav/dr_wav.h
+    Source/soloud/src/audiosource/wav/soloud_wav.cpp
+    Source/soloud/src/audiosource/wav/soloud_wavstream.cpp
+    Source/soloud/src/audiosource/wav/stb_vorbis.c
+    Source/soloud/src/audiosource/wav/stb_vorbis.h
+)
+
+set(SKIP_UNITY_BUILD_INCLUSION_FILES
+    Source/soloud/src/audiosource/wav/dr_impl.cpp
+    Source/soloud/src/backend/alsa/soloud_alsa.cpp
+    Source/soloud/src/backend/coreaudio/soloud_coreaudio.cpp
+    Source/soloud/src/backend/opensles/soloud_opensles.cpp
+    Source/soloud/src/backend/oss/soloud_oss.cpp
+    Source/soloud/src/backend/wasapi/soloud_wasapi.cpp
+    Source/soloud/src/backend/xaudio2/soloud_xaudio2.cpp
+    Source/soloud/src/backend/winmm/soloud_winmm.cpp
+)

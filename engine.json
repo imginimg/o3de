@@ -13,6 +13,7 @@
         "Gems/AtomContent",
         "Gems/AtomLyIntegration",
         "Gems/AtomTressFX",
+        "Gems/AudioEngineSoLoud",
         "Gems/AudioEngineWwise",
         "Gems/AudioSystem",
         "Gems/AWSClientAuth",

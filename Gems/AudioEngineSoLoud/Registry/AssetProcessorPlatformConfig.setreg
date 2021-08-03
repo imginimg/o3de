@@ -1,0 +1,33 @@
+{
+    "Amazon": {
+        "AssetProcessor": {
+            "Settings": {
+                "RC SoLoudAudioControls": {
+                    "pattern": "(.*libs\\\\/gameaudio\\\\/soloud\\\\/).*\\.xml",
+                    "params": "copy",
+                    "productAssetType": "{D59B6A2E-1BC0-488C-959B-CF27E784D1D7}"
+                },
+                "RC wav": {
+                    "glob": "*.wav",
+                    "params": "copy",
+                    "productAssetType": "{6DB53633-3793-428F-9440-1ED86248588B}"
+                },
+                "RC mp3": {
+                    "glob": "*.mp3",
+                    "params": "copy",
+                    "productAssetType": "{46E2755F-47DA-4266-A307-6CF32281D6E9}"
+                },
+                "RC ogg": {
+                    "glob": "*.ogg",
+                    "params": "copy",
+                    "productAssetType": "{6E56F69C-AE6D-41CD-8FED-4A208969A494}"
+                },
+                "RC flac": {
+                    "glob": "*.flac",
+                    "params": "copy",
+                    "productAssetType": "{85AB84B0-6DA6-4AB0-9E73-1C712DABB2FE}"
+                },
+            }
+        }
+    }
+}

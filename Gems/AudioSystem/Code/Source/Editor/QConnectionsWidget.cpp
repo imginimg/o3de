@@ -120,6 +120,31 @@ namespace AudioControls
                 }
             }
         }
+
+        if (m_connectionPropertiesWidget)
+        {
+            delete m_connectionPropertiesWidget;
+            m_connectionPropertiesWidget = nullptr;
+        }
+
+        if (connection && connection->HasProperties())
+        {
+            if (IAudioSystemEditor* audioSystemImpl = CAudioControlsEditorPlugin::GetAudioSystemEditorImpl())
+            {
+                m_connectionPropertiesWidget = audioSystemImpl->CreateConnectionPropertiesWidget(connection, controlType);
+                if (m_connectionPropertiesWidget)
+                {
+                    m_connectionPropertiesWidget->setParent(m_connectionPropertiesFrame);
+                    m_connectionPropertiesLayout->addWidget(m_connectionPropertiesWidget);
+
+                    bool widgetHasChangedSignal = m_connectionPropertiesWidget->metaObject()->indexOfSignal("ParametersChanged()") != -1;
+                    AZ_Error("Audio", widgetHasChangedSignal, "The widget created by IAudioSystemEditor::CreateConnectionPropertiesWidget() must have a \"ParametersChanged()\" signal.");
+
+                    if (widgetHasChangedSignal)
+                        connect(m_connectionPropertiesWidget, SIGNAL(ParametersChanged()), this, SLOT(CurrentConnectionModified()));
+                }
+            }
+        }
     }
 
     //-------------------------------------------------------------------------------------------//

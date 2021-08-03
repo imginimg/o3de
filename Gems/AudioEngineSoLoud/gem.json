@@ -1,0 +1,12 @@
+{
+    "gem_name": "AudioEngineSoLoud",
+    "display_name": "SoLoud Audio Engine",
+    "license": "Apache-2.0 Or MIT",
+    "origin": "Open 3D Engine - o3de.org",
+    "type": "Code",
+    "summary": "The SoLoud Audio Engine Gem provides support for open source audio engine SoLoud.",
+    "canonical_tags": ["Gem"],
+    "user_tags": ["Audio", "Utility", "Tools"],
+    "icon_path": "preview.png",
+    "requirements": ""
+}

@@ -51,6 +51,8 @@ namespace AudioControls
         CATLControl* m_control;
         QColor m_notFoundColor;
         QColor m_localizedColor;
+
+        QWidget* m_connectionPropertiesWidget = nullptr;
     };
 
 } // namespace AudioControls
