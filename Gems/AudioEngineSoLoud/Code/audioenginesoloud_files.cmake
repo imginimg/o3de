@@ -11,6 +11,7 @@ set(FILES
     Source/AudioEngineSoLoudGemSystemComponent.cpp
     Source/Engine/AudioSystemImpl_SoLoud.h
     Source/Engine/AudioSystemImpl_SoLoud.cpp
+    Source/Engine/ATLEntities.cpp
     Source/Engine/ATLEntities.h
     Source/Engine/AudioSystemImplCVars.h
     Source/Engine/AudioSystemImplCVars.cpp

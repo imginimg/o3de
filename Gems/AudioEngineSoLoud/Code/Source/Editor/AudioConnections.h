@@ -29,10 +29,10 @@ namespace AudioControls
         Audio::SAudioFileToTriggerParams m_params;
     };
 
-    class CRtpcConnection : public IAudioConnection
+    class CAudioFileToRtpcConnection : public IAudioConnection
     {
     public:
-        explicit CRtpcConnection(CID id)
+        explicit CAudioFileToRtpcConnection(CID id)
             : IAudioConnection(id)
         {
         }
@@ -42,6 +42,6 @@ namespace AudioControls
             return true;
         }
 
-        Audio::SRtpcParams m_params;
+        Audio::SAudioFileToRtpcParams m_params;
     };
 } // namespace AudioControls

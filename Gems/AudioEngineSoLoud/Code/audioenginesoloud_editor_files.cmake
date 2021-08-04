@@ -13,4 +13,7 @@ set(FILES
     Source/Editor/AudioFileToTriggerParamsWidget.h
     Source/Editor/AudioFileToTriggerParamsWidget.cpp
     Source/Editor/AudioFileToTriggerParamsWidget.ui
+    Source/Editor/AudioFileToRtpcParamsWidget.h
+    Source/Editor/AudioFileToRtpcParamsWidget.cpp
+    Source/Editor/AudioFileToRtpcParamsWidget.ui
 )

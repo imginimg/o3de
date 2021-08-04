@@ -8,6 +8,7 @@
 
 #include <AudioConnections.h>
 #include <AudioFileToTriggerParamsWidget.h>
+#include <AudioFileToRtpcParamsWidget.h>
 #include <AudioFileUtils.h>
 #include <AudioSystemEditor_SoLoud.h>
 #include <AzCore/StringFunc/StringFunc.h>
@@ -24,7 +25,7 @@ namespace AudioControls
         {
             Invalid = 0,
             AudioFile = AUDIO_BIT(0),
-            RTPC = AUDIO_BIT(1),
+            GlobalRTPC = AUDIO_BIT(1),
         };
     } // namespace ESoLoudControlType
 
@@ -43,9 +44,9 @@ namespace AudioControls
         }
 
         // Create global RTPCs.
-        for (int i = 0; i < Audio::ERtpcType::Count; ++i)
+        for (int i = 0; i < Audio::EGlobalRtpc::Count; ++i)
         {
-            SControlDef controlDef(Audio::ERtpcType::ToString(static_cast<Audio::ERtpcType::Type>(i)), ESoLoudControlType::RTPC);
+            SControlDef controlDef(Audio::EGlobalRtpc::ToString(static_cast<Audio::EGlobalRtpc::Type>(i)), ESoLoudControlType::GlobalRTPC);
             CreateControl(controlDef);
         }
 
@@ -121,7 +122,7 @@ namespace AudioControls
             case ESoLoudControlType::AudioFile:
                 return eACET_PRELOAD;
 
-            case ESoLoudControlType::RTPC:
+            case ESoLoudControlType::GlobalRTPC:
                 return eACET_RTPC;
         }
 
@@ -139,7 +140,7 @@ namespace AudioControls
                 return ESoLoudControlType::AudioFile;
 
             case eACET_RTPC:
-                return ESoLoudControlType::RTPC;
+                return ESoLoudControlType::GlobalRTPC | ESoLoudControlType::AudioFile;
         }
 
         return AUDIO_IMPL_INVALID_TYPE;
@@ -163,6 +164,10 @@ namespace AudioControls
                         result = AZStd::make_shared<CAudioFileToTriggerConnection>(middlewareControl->GetId());
                         break;
 
+                    case eACET_RTPC:
+                        result = AZStd::make_shared<CAudioFileToRtpcConnection>(middlewareControl->GetId());
+                        break;
+
                     case eACET_PRELOAD:
                         result = AZStd::make_shared<IAudioConnection>(middlewareControl->GetId());
                         break;
@@ -171,9 +176,9 @@ namespace AudioControls
                 break;
             }
 
-            case ESoLoudControlType::RTPC:
+            case ESoLoudControlType::GlobalRTPC:
             {
-                result = AZStd::make_shared<CRtpcConnection>(middlewareControl->GetId());
+                result = AZStd::make_shared<IAudioConnection>(middlewareControl->GetId());
                 break;
             }
         }
@@ -225,6 +230,16 @@ namespace AudioControls
                     break;
                 }
 
+                case eACET_RTPC:
+                {
+                    auto conn = AZStd::make_shared<CAudioFileToRtpcConnection>(control->GetId());
+                    if (!conn->m_params.ReadFromXml(*node))
+                        return nullptr;
+
+                    connection = conn;
+                    break;
+                }
+
                 case eACET_PRELOAD:
                     connection = AZStd::make_shared<IAudioConnection>(control->GetId());
                     break;
@@ -234,24 +249,19 @@ namespace AudioControls
             }
         }
 
-        // Connections from RTPC.
-        const ERtpcType::Type rtpcType = ERtpcType::FromString(node->name());
-        if (rtpcType != ERtpcType::Count)
+        // Connections from GlobalRTPC.
+        const EGlobalRtpc::Type rtpcType = EGlobalRtpc::FromString(node->name());
+        if (rtpcType != EGlobalRtpc::Count)
         {
             const char* controlName = node->name();
             control = GetControlByName(controlName);
             if (!control)
             {
-                control = CreateControl(SControlDef(controlName, ESoLoudControlType::RTPC));
+                control = CreateControl(SControlDef(controlName, ESoLoudControlType::GlobalRTPC));
                 control->SetPlaceholder(true);
             }
 
-            auto conn = AZStd::make_shared<CRtpcConnection>(control->GetId());
-
-            auto attr = node->first_attribute(SRtpcParams::ContextTag);
-            if (attr)
-                conn->m_params.context = attr->value();
-
+            auto conn = AZStd::make_shared<IAudioConnection>(control->GetId());
             connection = conn;
         }
 
@@ -294,6 +304,13 @@ namespace AudioControls
                         break;
                     }
 
+                    case eACET_RTPC:
+                    {
+                        const CAudioFileToRtpcConnection* conn = static_cast<const CAudioFileToRtpcConnection*>(connection.get());
+                        conn->m_params.WriteToXml(*connNode, xmlAlloc);
+                        break;
+                    }
+
                     case eACET_PRELOAD:
                         break;
 
@@ -304,18 +321,13 @@ namespace AudioControls
                 break;
             }
 
-            case ESoLoudControlType::RTPC:
+            case ESoLoudControlType::GlobalRTPC:
             {
-                const CRtpcConnection* conn = static_cast<const CRtpcConnection*>(connection.get());
-
-                ERtpcType::Type rtpcType = ERtpcType::FromString(control->GetName().c_str());
-                if (rtpcType == ERtpcType::Count)
+                EGlobalRtpc::Type rtpcType = EGlobalRtpc::FromString(control->GetName().c_str());
+                if (rtpcType == EGlobalRtpc::Count)
                     return nullptr;
 
                 connNode->name(xmlAlloc.allocate_string(control->GetName().c_str()));
-
-                auto attr = xmlAlloc.allocate_attribute(SRtpcParams::ContextTag, xmlAlloc.allocate_string(conn->m_params.context.c_str()));
-                connNode->append_attribute(attr);
                 break;
             }
 
@@ -432,11 +444,25 @@ namespace AudioControls
         if (!control)
             return nullptr;
 
-        if (control->GetType() == ESoLoudControlType::AudioFile && atlControlType == eACET_TRIGGER)
+        switch (control->GetType())
         {
-            return new CAudioFileToTriggerParamsWidget(connection);
-        }
+            case ESoLoudControlType::AudioFile:
+            {
+                switch (atlControlType)
+                {
+                    case eACET_TRIGGER:
+                        return new CAudioFileToTriggerParamsWidget(connection);
 
-        return nullptr;
+                    case eACET_RTPC:
+                        return new CAudioFileToRtpcParamsWidget(connection);
+
+                    default:
+                        return nullptr;
+                }
+            }
+
+            default:
+                return nullptr;
+        }
     }
 } // namespace AudioControls

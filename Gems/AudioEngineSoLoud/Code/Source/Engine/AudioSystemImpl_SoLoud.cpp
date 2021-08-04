@@ -50,7 +50,7 @@ namespace Audio
 
     void CAudioSystemImpl_SoLoud::OnAudioSystemRefresh()
     {
-        CleanupAudioSources();
+        m_audioSources.clear();
     }
 
     void CAudioSystemImpl_SoLoud::Update(float)
@@ -88,8 +88,8 @@ namespace Audio
 
     EAudioRequestStatus CAudioSystemImpl_SoLoud::ShutDown()
     {
-        CleanupAudioSources();
-        CleanupAudioObjects();
+        m_audioSources.clear();
+        m_audioObjects.clear();
 
         m_soloud.deinit();
         return eARS_SUCCESS;
@@ -104,7 +104,7 @@ namespace Audio
     {
         m_soloud.stopAll();
 
-        for (auto object : m_audioObjects)
+        for (auto& object : m_audioObjects)
             object->m_activeSoVoices.clear();
 
         return eARS_SUCCESS;
@@ -173,20 +173,20 @@ namespace Audio
             return eARS_FAILURE;
 
         AZStd::string_view audioFilePath = audioSourceIt->first;
-        SoLoud::AudioSource* const audioSource = audioSourceIt->second;
+        SoLoud::AudioSource* const audioSource = audioSourceIt->second.get();
 
         switch (trigger->m_audioFileToTriggerParams.m_action)
         {
             case EAudioAction::Start:
             {
                 SoLoud::handle sohandle;
+                const float effectiveVoiceVolume = audioSourceIt->second->mVolume * trigger->m_audioFileToTriggerParams.m_volume;
 
                 if (trigger->m_audioFileToTriggerParams.m_positional)
                 {
                     AZ::Vector3 posVec = object->m_pos.GetPositionVec();
 
-                    sohandle = m_soloud.play3d(*audioSource, posVec.GetX(), posVec.GetY(), posVec.GetZ(), 0.0f, 0.0f, 0.0f,
-                        trigger->m_audioFileToTriggerParams.m_volume, true);
+                    sohandle = m_soloud.play3d(*audioSource, posVec.GetX(), posVec.GetY(), posVec.GetZ(), 0.0f, 0.0f, 0.0f, effectiveVoiceVolume, true);
 
                     m_soloud.set3dSourceAttenuation(sohandle, trigger->m_audioFileToTriggerParams.m_attenuationMode,
                         trigger->m_audioFileToTriggerParams.m_attenuationRolloffFactor);
@@ -196,7 +196,7 @@ namespace Audio
                 }
                 else
                 {
-                    sohandle = m_soloud.playBackground(*audioSource, trigger->m_audioFileToTriggerParams.m_volume, true);
+                    sohandle = m_soloud.playBackground(*audioSource, effectiveVoiceVolume, true);
                 }
 
                 m_soloud.setLooping(sohandle, trigger->m_audioFileToTriggerParams.m_looping);
@@ -204,16 +204,14 @@ namespace Audio
 
                 event->m_isPlayEvent = true;
                 event->m_soloudHandle = sohandle;
-                object->m_activeSoVoices.insert(AZStd::make_pair(audioFilePath, sohandle));
+                const SActiveSoVoiceData voiceData{ sohandle, trigger->m_audioFileToTriggerParams.m_volume };
+                object->m_activeSoVoices.insert(AZStd::make_pair(audioFilePath, voiceData));
                 break;
             }
 
             case EAudioAction::Stop:
             {
-                auto range = object->m_activeSoVoices.equal_range(audioFilePath);
-                for (auto it = range.first; it != range.second; ++it)
-                    m_soloud.stop(it->second);
-
+                audioSourceIt->second->stop();
                 object->m_activeSoVoices.erase(audioFilePath);
                 break;
             }
@@ -222,7 +220,7 @@ namespace Audio
             {
                 auto range = object->m_activeSoVoices.equal_range(audioFilePath);
                 for (auto it = range.first; it != range.second; ++it)
-                    m_soloud.setPause(it->second, true);
+                    m_soloud.setPause(it->second.m_handle, true);
 
                 break;
             }
@@ -231,7 +229,7 @@ namespace Audio
             {
                 auto range = object->m_activeSoVoices.equal_range(audioFilePath);
                 for (auto it = range.first; it != range.second; ++it)
-                    m_soloud.setPause(it->second, false);
+                    m_soloud.setPause(it->second.m_handle, false);
 
                 break;
             }
@@ -258,7 +256,7 @@ namespace Audio
 
         for (auto pair : object->m_activeSoVoices)
         {
-            if (pair.second == event->m_soloudHandle)
+            if (pair.second.m_handle == event->m_soloudHandle)
             {
                 object->m_activeSoVoices.erase(pair.first);
                 break;
@@ -275,7 +273,7 @@ namespace Audio
             return eARS_FAILURE;
 
         for (auto pair : object->m_activeSoVoices)
-            m_soloud.stop(pair.second);
+            m_soloud.stop(pair.second.m_handle);
 
         object->m_activeSoVoices.clear();
         return eARS_SUCCESS;
@@ -292,7 +290,7 @@ namespace Audio
 
         for (auto pair : object->m_activeSoVoices)
         {
-            m_soloud.set3dSourcePosition(pair.second, posVec.GetX(), posVec.GetY(), posVec.GetZ());
+            m_soloud.set3dSourcePosition(pair.second.m_handle, posVec.GetX(), posVec.GetY(), posVec.GetZ());
         }
 
         return eARS_SUCCESS;
@@ -303,17 +301,87 @@ namespace Audio
         return eARS_FAILURE;
     }
 
-    EAudioRequestStatus CAudioSystemImpl_SoLoud::SetRtpc(IATLAudioObjectData*, const IATLRtpcImplData* rtpcData, float value)
+    EAudioRequestStatus CAudioSystemImpl_SoLoud::SetRtpc(IATLAudioObjectData* objecData, const IATLRtpcImplData* rtpcData, float value)
     {
+        SATLAudioObjectDataSoLoud* object = static_cast<SATLAudioObjectDataSoLoud*>(objecData);
         const SATLRtpcImplDataSoLoud* rtpc = static_cast<const SATLRtpcImplDataSoLoud*>(rtpcData);
-        if (!rtpc)
+        if (!object || !rtpc)
             return eARS_FAILURE;
 
         switch (rtpc->m_type)
         {
-            case ERtpcType::GlobalVolume:
-                m_soloud.setGlobalVolume(value);
+            case ERtpcImpl::Global:
+            {
+                switch (rtpc->m_global.m_type)
+                {
+                    case EGlobalRtpc::GlobalVolume:
+                        m_soloud.setGlobalVolume(value);
+                        break;
+
+                    default:
+                        return eARS_FAILURE;
+                }
                 break;
+            }
+
+            case ERtpcImpl::AudioFile:
+            {
+                auto audioSourceIt = m_audioSources.find(rtpc->m_audioFile.m_audioFilePath);
+                if (audioSourceIt == m_audioSources.end())
+                    return eARS_FAILURE;
+
+                auto voiceRange = object->m_activeSoVoices.equal_range(audioSourceIt->first);
+
+                switch (rtpc->m_audioFile.m_params.m_type)
+                {
+                    case EAudioFileRtpc::Volume:
+                    {
+                        if (rtpc->m_audioFile.m_params.m_perObject)
+                        {
+                            const float effectiveVoiceVolume = audioSourceIt->second->mVolume * value;
+                            for (auto it = voiceRange.first; it != voiceRange.second; ++it)
+                            {
+                                it->second.m_volume = value;
+                                m_soloud.setVolume(it->second.m_handle, effectiveVoiceVolume);
+                            }
+                        }
+                        else
+                        {
+                            audioSourceIt->second->setVolume(value);
+
+                            // Set volume on all currently playing instances.
+                            for (auto& obj : m_audioObjects)
+                            {
+                                for (auto pair : obj->m_activeSoVoices)
+                                {
+                                    const float effectiveVoiceVolume = pair.second.m_volume * value;
+                                    if (pair.first == rtpc->m_audioFile.m_audioFilePath)
+                                        m_soloud.setVolume(pair.second.m_handle, effectiveVoiceVolume);
+                                }
+                            }
+                        }
+                        break;
+                    }
+
+                    case EAudioFileRtpc::PlaySpeed:
+                    {
+                        for (auto it = voiceRange.first; it != voiceRange.second; ++it)
+                            m_soloud.setRelativePlaySpeed(it->second.m_handle, value);
+                        break;
+                    }
+
+                    case EAudioFileRtpc::Seek:
+                    {
+                        for (auto it = voiceRange.first; it != voiceRange.second; ++it)
+                            m_soloud.seek(it->second.m_handle, value);
+                        break;
+                    }
+
+                    default:
+                        return eARS_FAILURE; 
+                }
+                break;
+            }
 
             default:
                 return eARS_FAILURE;
@@ -362,19 +430,18 @@ namespace Audio
         if (!data)
             return eARS_FAILURE;
 
-        SoLoud::Wav* source = azcreate(SoLoud::Wav, (), Audio::AudioImplAllocator, "SoLoud::Wav");
-        if (!source)
+        AudioSourcePtr audioSource(azcreate(SoLoud::Wav, (), Audio::AudioImplAllocator, "SoLoud::Wav"));
+        if (!audioSource)
             return eARS_FAILURE;
 
-        auto result = source->loadMem(static_cast<const unsigned char*>(audioFileEntry->pFileData), audioFileEntry->nSize, false, false);
+        auto result = audioSource->loadMem(static_cast<const unsigned char*>(audioFileEntry->pFileData), audioFileEntry->nSize, false, false);
         if (result != SoLoud::SO_NO_ERROR)
         {
             AZ_Error(LogWindow, false, "Unable to load audio file \"%s\"! %s", data->m_fullFilePath.c_str(), m_soloud.getErrorString(result));
-            azdestroy(source, Audio::AudioImplAllocator, SoLoud::Wav);
             return eARS_FAILURE;
         }
 
-        m_audioSources[data->m_fullFilePath] = source;
+        m_audioSources.emplace(data->m_fullFilePath, AZStd::move(audioSource));
         return eARS_SUCCESS;
     }
 
@@ -388,7 +455,6 @@ namespace Audio
         if (it == m_audioSources.end())
             return eARS_FAILURE;
 
-        azdestroy(it->second, Audio::AudioImplAllocator, SoLoud::Wav);
         m_audioSources.erase(it);
         return eARS_SUCCESS;
     }
@@ -462,19 +528,15 @@ namespace Audio
         if (!audioRtpcNode)
             return nullptr;
 
-        ERtpcType::Type rtpcType = ERtpcType::FromString(audioRtpcNode->name());
-        if (rtpcType == ERtpcType::Count)
-            return nullptr;
-
         SATLRtpcImplDataSoLoud* rtpcData = azcreate(SATLRtpcImplDataSoLoud, (), Audio::AudioImplAllocator, "SATLRtpcImplDataSoLoud");
         if (!rtpcData)
             return nullptr;
 
-        rtpcData->m_type = rtpcType;
-
-        auto attr = audioRtpcNode->first_attribute(SRtpcParams::ContextTag);
-        if (attr)
-            rtpcData->m_params.context = attr->value();
+        if (!rtpcData->ReadFromXml(*audioRtpcNode))
+        {
+            azdestroy(rtpcData, Audio::AudioImplAllocator, SATLRtpcImplDataSoLoud);
+            return nullptr;
+        }
 
         return rtpcData;
     }
@@ -513,12 +575,11 @@ namespace Audio
 
     IATLAudioObjectData* CAudioSystemImpl_SoLoud::NewAudioObjectData(TAudioObjectID)
     {
-        SATLAudioObjectDataSoLoud* object = azcreate(SATLAudioObjectDataSoLoud, (), Audio::AudioImplAllocator, "SATLAudioObjectDataSoLoud");
-        if (!object)
+        auto pair = m_audioObjects.emplace(azcreate(SATLAudioObjectDataSoLoud, (), Audio::AudioImplAllocator, "SATLAudioObjectDataSoLoud"));
+        if (!(*pair.first))
             return nullptr;
 
-        m_audioObjects.insert(object);
-        return object;
+        return pair.first->get();
     }
 
     void CAudioSystemImpl_SoLoud::DeleteAudioObjectData(IATLAudioObjectData* const oldObjectData)
@@ -526,11 +587,10 @@ namespace Audio
         if (!oldObjectData)
             return;
 
-        auto it = m_audioObjects.find(static_cast<SATLAudioObjectDataSoLoud*>(oldObjectData));
+        auto pred = [&](AudioObjectPtr& ptr) { return ptr.get() == oldObjectData; };
+        auto it = AZStd::find_if(m_audioObjects.begin(), m_audioObjects.end(), pred);
         if (it != m_audioObjects.end())
             m_audioObjects.erase(it);
-
-        azdestroy(oldObjectData, Audio::AudioImplAllocator, SATLAudioObjectDataSoLoud);
     }
 
     IATLListenerData* CAudioSystemImpl_SoLoud::NewDefaultAudioListenerObjectData(TATLIDType objectId)
@@ -612,12 +672,12 @@ namespace Audio
 
     void CAudioSystemImpl_SoLoud::CheckObjectForExpiredHandles(SATLAudioObjectDataSoLoud& object)
     {
-        AZStd::vector<AZStd::unordered_multimap<AZStd::string, SoLoud::handle>::iterator> iterators;
+        AZStd::vector<AZStd::unordered_multimap<AZStd::string, SActiveSoVoiceData>::iterator> iterators;
         iterators.reserve(object.m_activeSoVoices.size());
 
         for (auto it = object.m_activeSoVoices.begin(); it != object.m_activeSoVoices.end(); ++it)
         {
-            const SoLoud::handle handle = it->second;
+            const SoLoud::handle handle = it->second.m_handle;
 
             if (!m_soloud.isValidVoiceHandle(handle))
             {
@@ -627,26 +687,6 @@ namespace Audio
 
         for (auto it : iterators)
             object.m_activeSoVoices.erase(it);
-    }
-
-    void CAudioSystemImpl_SoLoud::CleanupAudioSources()
-    {
-        for (const auto& pair : m_audioSources)
-        {
-            azdestroy(pair.second, Audio::AudioImplAllocator, SoLoud::Wav);
-        }
-
-        m_audioSources.clear();
-    }
-
-    void CAudioSystemImpl_SoLoud::CleanupAudioObjects()
-    {
-        for (auto object : m_audioObjects)
-        {
-            azdestroy(object, Audio::AudioImplAllocator, SATLAudioObjectDataSoLoud);
-        }
-
-        m_audioObjects.clear();
     }
 
     void CAudioSystemImpl_SoLoud::MuteAll()

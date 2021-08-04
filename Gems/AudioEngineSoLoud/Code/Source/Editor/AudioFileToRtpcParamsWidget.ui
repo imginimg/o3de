@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>AudioFileToRtpcParamsWidget</class>
+ <widget class="QWidget" name="AudioFileToRtpcParamsWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>179</width>
+    <height>73</height>
+   </rect>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>RTPC type</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QComboBox" name="m_rtpcTypeCB">
+     <item>
+      <property name="text">
+       <string>Volume</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Play speed</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Seek</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Scope</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QComboBox" name="m_rtpcScopeCB">
+     <item>
+      <property name="text">
+       <string>Audio file</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Object</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

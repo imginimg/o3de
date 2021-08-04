@@ -96,7 +96,35 @@ namespace Audio
         void WriteToXml(AZ::rapidxml::xml_node<char>& node, AZ::rapidxml::memory_pool<>& xmlAlloc) const;
     };
 
-    namespace ERtpcType
+    namespace EAudioFileRtpc
+    {
+        enum Type
+        {
+            Volume,
+            PlaySpeed,
+            Seek,
+
+            Count
+        };
+
+        constexpr static const char* Tag = "AudioFileRtpcType";
+
+        const char* ToString(Type type);
+        Type FromString(const char* str);
+    }
+
+    struct SAudioFileToRtpcParams
+    {
+        EAudioFileRtpc::Type m_type = EAudioFileRtpc::Volume;
+        bool m_perObject = false;
+
+        constexpr static char* PerObjectTag = "PerObject";
+
+        bool ReadFromXml(const AZ::rapidxml::xml_node<char>& node);
+        void WriteToXml(AZ::rapidxml::xml_node<char>& node, AZ::rapidxml::memory_pool<>& xmlAlloc) const;
+    };
+
+    namespace EGlobalRtpc
     {
         enum Type
         {
@@ -105,18 +133,11 @@ namespace Audio
             Count
         };
 
-        constexpr static const char* Tag = "RtpcType";
+        constexpr static const char* Tag = "GlobalRtpcType";
 
         const char* ToString(Type type);
-        ERtpcType::Type FromString(const char* str);
-    } // namespace ERtpcType
-
-    struct SRtpcParams
-    {
-        AZStd::string context;
-
-        constexpr static char* ContextTag = "Context";
-    };
+        EGlobalRtpc::Type FromString(const char* str);
+    } // namespace EGlobalRtpc
 
     //------------------------------------
     void EraseSubStr(AZStd::string& inOutStr, AZStd::string_view strToErase);

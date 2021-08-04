@@ -182,23 +182,79 @@ namespace Audio
         node.append_attribute(attr);
     }
 
-    const char* ERtpcType::ToString(Type type)
+    const char* EAudioFileRtpc::ToString(Type type)
     {
-        static const char* strings[EAudioAction::Count] = { "GlobalVolume" };
+        constexpr static const char* strings[EAudioAction::Count] = { "Volume", "PlaySpeed", "Seek" };
 
-        AZ_Assert(type < ERtpcType::Count, "Invalid ERtpcType value!");
+        AZ_Assert(type < EAudioFileRtpc::Count, "Invalid EAudioFileRtpc value!");
         return strings[type];
     }
 
-    ERtpcType::Type ERtpcType::FromString(const char* str)
+    EAudioFileRtpc::Type EAudioFileRtpc::FromString(const char* str)
     {
-        if (AZ::StringFunc::Equal(str, "GlobalVolume"))
+        if (AZ::StringFunc::Equal(str, "Volume"))
         {
-            return ERtpcType::GlobalVolume;
+            return EAudioFileRtpc::Volume;
+        }
+        else if (AZ::StringFunc::Equal(str, "PlaySpeed"))
+        {
+            return EAudioFileRtpc::PlaySpeed;
+        }
+        else if (AZ::StringFunc::Equal(str, "Seek"))
+        {
+            return EAudioFileRtpc::Seek;
         }
         else
         {
-            return ERtpcType::Count;
+            return EAudioFileRtpc::Count;
+        }
+    }
+
+    bool SAudioFileToRtpcParams::ReadFromXml(const AZ::rapidxml::xml_node<char>& node)
+    {
+        auto attr = node.first_attribute(EAudioFileRtpc::Tag);
+        if (attr)
+        {
+            m_type = EAudioFileRtpc::FromString(attr->value());
+            if (m_type == EAudioAction::Count)
+                return false;
+        }
+
+        attr = node.first_attribute(PerObjectTag);
+        if (attr)
+        {
+            m_perObject = AZStd::stoi(AZStd::string(attr->value()));
+        }
+
+        return true;
+    }
+
+    void SAudioFileToRtpcParams::WriteToXml(AZ::rapidxml::xml_node<char>& node, AZ::rapidxml::memory_pool<>& xmlAlloc) const
+    {
+        auto attr = xmlAlloc.allocate_attribute(EAudioFileRtpc::Tag, EAudioFileRtpc::ToString(m_type));
+        node.append_attribute(attr);
+
+        attr = xmlAlloc.allocate_attribute(PerObjectTag, xmlAlloc.allocate_string(AZStd::to_string(m_perObject).c_str()));
+        node.append_attribute(attr);
+    }
+
+    const char* EGlobalRtpc::ToString(Type type)
+    {
+        static const char* strings[EAudioAction::Count] = { "GlobalVolume" };
+
+        AZ_Assert(type < EGlobalRtpc::Count, "Invalid EGlobalRtpc value!");
+        return strings[type];
+    }
+
+    EGlobalRtpc::Type EGlobalRtpc::FromString(const char* str)
+    {
+        if (AZ::StringFunc::Equal(str, "GlobalVolume"))
+        {
+            return EGlobalRtpc::GlobalVolume;
+        }
+        else
+        {
+            return EGlobalRtpc::Count;
         }
     }
 
@@ -208,5 +264,4 @@ namespace Audio
         if (pos != AZStd::string::npos)
             inOutStr.erase(pos, strToErase.length());
     }
-
 } // namespace Audio

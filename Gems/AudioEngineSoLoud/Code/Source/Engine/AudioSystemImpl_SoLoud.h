@@ -99,15 +99,27 @@ namespace Audio
         // ~AudioSystemImplementationRequestBus
 
     private:
+        template<class T>
+        struct TDeleter
+        {
+            void operator()(T* ptr)
+            {
+                azdestroy(ptr, Audio::AudioImplAllocator, T);
+            }
+        };
+
+        using AudioObjectPtr = AZStd::unique_ptr<SATLAudioObjectDataSoLoud, TDeleter<SATLAudioObjectDataSoLoud>>;
+        using AudioSourcePtr = AZStd::unique_ptr<SoLoud::Wav, TDeleter<SoLoud::Wav>>;
+
+
         void CheckObjectForExpiredHandles(SATLAudioObjectDataSoLoud& object);
-        void CleanupAudioSources();
-        void CleanupAudioObjects();
         void MuteAll();
         void UnmuteAll();
 
+
         SoLoud::Soloud m_soloud;
-        AZStd::unordered_set<SATLAudioObjectDataSoLoud*> m_audioObjects;
-        AZStd::unordered_map<AZStd::string, SoLoud::Wav*> m_audioSources; // Key - audio file path.
         float m_globalVolume;
+        AZStd::unordered_set<AudioObjectPtr> m_audioObjects;
+        AZStd::unordered_map<AZStd::string, AudioSourcePtr> m_audioSources; // Key - audio file path.
     };
 } // namespace Audio
