@@ -11,16 +11,21 @@
 #include <AzCore/XML/rapidxml.h>
 #include <AzCore/base.h>
 #include <AzCore/std/string/string.h>
+#include <AzCore/IO/Path/Path.h>
 
 namespace Audio
 {
     constexpr static const char* LogWindow = "Audio SoLoud";
 
-    constexpr static const char* AudioFilesPath = "sounds/soloud";
+    constexpr static const AZ::IO::FixedMaxPath AudioFilesPath = AZ::IO::FixedMaxPath("sounds/soloud").LexicallyNormal();
+    //constexpr static const char* AudioFilesPath = "sounds/soloud";
+    //constexpr static const char* CurrentLanguage = "english";
+    constexpr static const char* LocalizationDirName = "localization";
     constexpr static const char* AudioFileFormatsArray[] = { "wav", "mp3", "ogg", "flac" };
 
-    constexpr static const char* AudioFilePathTag = "AudioFilePath";
     constexpr static const char* AudioFileTag = "AudioFile";
+    constexpr static const char* AudioFilePathTag = "AudioFilePath";
+    constexpr static const char* AudioFileLocalizedTag = "Localized";
 
     //------------------------------------
     namespace ESpeakerConfiguration

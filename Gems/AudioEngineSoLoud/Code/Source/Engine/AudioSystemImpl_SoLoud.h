@@ -11,6 +11,7 @@
 #include <AudioAllocators.h>
 #include <AzCore/std/containers/unordered_map.h>
 #include <AzCore/std/containers/unordered_set.h>
+#include <AzCore/IO/Path/Path.h>
 #include <IAudioSystemImplementation.h>
 #include <soloud.h>
 
@@ -121,5 +122,7 @@ namespace Audio
         float m_globalVolume;
         AZStd::unordered_set<AudioObjectPtr> m_audioObjects;
         AZStd::unordered_map<AZStd::string, AudioSourcePtr> m_audioSources; // Key - audio file path.
+        AZStd::string m_currentLanguageName;
+        AZ::IO::FixedMaxPath m_localizationDirPath;
     };
 } // namespace Audio

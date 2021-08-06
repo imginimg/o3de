@@ -476,13 +476,25 @@ namespace Audio
         if (!audioFilePath || audioFilePath[0] == '\0')
             return eARS_FAILURE;
 
+        bool isLocalized = false;
+        attr = audioFileEntryNode->first_attribute(AudioFileLocalizedTag);
+        if (attr)
+        {
+            isLocalized = AZStd::stoi(AZStd::string(attr->value()));
+        }
+
         SATLAudioFileEntryDataSoLoud* data = azcreate(SATLAudioFileEntryDataSoLoud, (), Audio::AudioImplAllocator, "ATLAudioFileEntryDataSoLoud");
         if (!data)
             return eARS_FAILURE;
 
-        data->m_fullFilePath = audioFilePath;
+        AZ::IO::FixedMaxPath fullFilePath = audioFilePath;
+        if (isLocalized)
+            fullFilePath = AZ::IO::FixedMaxPath(LocalizationDirName) / m_currentLanguageName / fullFilePath; 
+        data->m_fullFilePath = fullFilePath.Native();
+
         fileEntryInfo->pImplData = data;
         fileEntryInfo->sFileName = audioFilePath;
+        fileEntryInfo->bLocalized = isLocalized;
 
         return eARS_SUCCESS;
     }
@@ -492,9 +504,19 @@ namespace Audio
         azdestroy(oldAudioFileEntryData, Audio::AudioImplAllocator, SATLAudioFileEntryDataSoLoud);
     }
 
-    const char* const CAudioSystemImpl_SoLoud::GetAudioFileLocation(SATLAudioFileEntryInfo*)
+    const char* const CAudioSystemImpl_SoLoud::GetAudioFileLocation(SATLAudioFileEntryInfo* fileEntryInfo)
     {
-        return AudioFilesPath;
+        if (!fileEntryInfo)
+            return nullptr;
+
+        if (fileEntryInfo->bLocalized)
+        {
+            return m_localizationDirPath.c_str();
+        }
+        else
+        {
+            return AudioFilesPath.c_str();
+        }
     }
 
     IATLTriggerImplData* CAudioSystemImpl_SoLoud::NewAudioTriggerImplData(const AZ::rapidxml::xml_node<char>* audioTriggerNode)
@@ -508,12 +530,24 @@ namespace Audio
         auto attr = audioTriggerNode->first_attribute(AudioFilePathTag);
         if (!attr || !attr->value() || attr->value()[0] == '\0')
             return nullptr;
+        const char* audioFilePath = attr->value();
+
+        bool isLocalized = false;
+        attr = audioTriggerNode->first_attribute(AudioFileLocalizedTag);
+        if (attr)
+        {
+            isLocalized = AZStd::stoi(AZStd::string(attr->value()));
+        }
+
+        AZ::IO::FixedMaxPath fullFilePath = audioFilePath;
+        if (isLocalized)
+            fullFilePath = AZ::IO::FixedMaxPath(LocalizationDirName) / m_currentLanguageName / fullFilePath; 
 
         SATLTriggerImplDataSoLoud* triggerImpl = azcreate(SATLTriggerImplDataSoLoud, (), Audio::AudioImplAllocator, "SATLTriggerImplDataSoLoud");
         if (!triggerImpl)
             return nullptr;
 
-        triggerImpl->m_audioFilePath = attr->value();
+        triggerImpl->m_audioFilePath = fullFilePath.Native();
         triggerImpl->m_audioFileToTriggerParams.ReadFromXml(*audioTriggerNode);
         return triggerImpl;
     }
@@ -625,8 +659,14 @@ namespace Audio
             *event = SATLEventDataSoLoud();
     }
 
-    void CAudioSystemImpl_SoLoud::SetLanguage(const char*)
+    void CAudioSystemImpl_SoLoud::SetLanguage(const char* language)
     {
+        if (!language)
+            return;
+
+        m_currentLanguageName = language;
+        AZStd::to_lower(m_currentLanguageName.begin(), m_currentLanguageName.end());
+        m_localizationDirPath = AudioFilesPath / LocalizationDirName / language;
     }
 
     const char* const CAudioSystemImpl_SoLoud::GetImplSubPath() const

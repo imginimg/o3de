@@ -10,6 +10,7 @@
 
 #include <AzCore/std/containers/unordered_map.h>
 #include <AzCore/std/smart_ptr/shared_ptr.h>
+#include <AzCore/Console/IConsole.h>
 #include <IAudioConnection.h>
 #include <IAudioInterfacesCommonData.h>
 #include <IAudioSystemControl.h>
@@ -20,7 +21,7 @@ namespace AudioControls
     class CAudioSystemEditor_SoLoud : public IAudioSystemEditor
     {
     public:
-        CAudioSystemEditor_SoLoud() = default;
+        CAudioSystemEditor_SoLoud();
         ~CAudioSystemEditor_SoLoud() = default;
 
         // IAudioSystemEditor
@@ -43,11 +44,17 @@ namespace AudioControls
         // ~IAudioSystemEditor
 
     private:
+        constexpr static const char ControlNamePathSeparator = '/';
+
+
         IAudioSystemControl* GetControlByName(AZStd::string name, bool isLocalized = false, IAudioSystemControl* parent = nullptr) const;
         CID GetID(const AZStd::string_view name) const;
-        void ScanAudioFilesAndCreateControls(AZStd::string_view folderPath);
+        void ScanAudioFilesAndCreateControls(AZ::IO::PathView dirPathToScan, bool localized = false);
 
+
+        AZStd::string m_currentLanguageName;
         IAudioSystemControl m_rootControl;
+        IAudioSystemControl m_localizedParentControl;
 
         using TControlPtr = AZStd::shared_ptr<IAudioSystemControl>;
         using TControlMap = AZStd::unordered_map<CID, TControlPtr>;
@@ -56,6 +63,6 @@ namespace AudioControls
         using TConnectionsMap = AZStd::unordered_map<CID, int>;
         TConnectionsMap m_connectionsByID;
 
-        AZ::rapidxml::memory_pool<> xmlAlloc;
+        AZ::rapidxml::memory_pool<> m_xmlAlloc;
     };
 } // namespace AudioControls

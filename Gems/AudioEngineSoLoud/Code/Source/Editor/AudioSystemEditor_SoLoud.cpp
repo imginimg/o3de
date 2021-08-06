@@ -14,6 +14,7 @@
 #include <AzCore/StringFunc/StringFunc.h>
 #include <AzCore/Utils/Utils.h>
 #include <AzCore/std/smart_ptr/make_shared.h>
+#include <AzCore/std/string/conversions.h>
 #include <IAudioSystem.h>
 
 namespace AudioControls
@@ -30,6 +31,12 @@ namespace AudioControls
     } // namespace ESoLoudControlType
 
     //----------------------------------------------
+    CAudioSystemEditor_SoLoud::CAudioSystemEditor_SoLoud()
+    {
+        m_localizedParentControl.SetParent(&m_rootControl);
+        m_rootControl.AddChild(&m_localizedParentControl);
+    }
+
     void CAudioSystemEditor_SoLoud::Reload()
     {
         // set all the controls as placeholder as we don't know if
@@ -50,24 +57,44 @@ namespace AudioControls
             CreateControl(controlDef);
         }
 
-        ScanAudioFilesAndCreateControls(Audio::AudioFilesPath);
+        {
+            m_currentLanguageName.clear();
+            if (auto console = AZ::Interface<AZ::IConsole>::Get())
+            {
+                console->GetCvarValue("g_languageAudio", m_currentLanguageName);
+                AZStd::to_lower(m_currentLanguageName.begin(), m_currentLanguageName.end());
+            }
+
+            AZStd::string parentName = "Localized files";
+            if (!m_currentLanguageName.empty())
+                parentName += " (" + m_currentLanguageName + ")";
+
+            m_localizedParentControl.SetName(parentName);
+
+            ScanAudioFilesAndCreateControls(Audio::AudioFilesPath);
+        }
 
         m_connectionsByID.clear();
-        xmlAlloc.clear();
+        m_xmlAlloc.clear();
     }
 
     IAudioSystemControl* CAudioSystemEditor_SoLoud::CreateControl(const SControlDef& controlDefinition)
     {
         AZStd::string fullName = controlDefinition.m_name;
         IAudioSystemControl* parent = controlDefinition.m_parentControl;
-        if (parent)
+        /*if (parent)
         {
             AZ::StringFunc::Path::Join(controlDefinition.m_parentControl->GetName().c_str(), fullName.c_str(), fullName);
-        }
+        }*/
 
-        if (!controlDefinition.m_path.empty())
+        /*if (!controlDefinition.m_path.empty())
         {
             AZ::StringFunc::Path::Join(controlDefinition.m_path.c_str(), fullName.c_str(), fullName);
+        }*/
+
+        if (controlDefinition.m_isLocalized)
+        {
+            AZ::StringFunc::Path::Join(m_currentLanguageName.c_str(), fullName.c_str(), fullName);
         }
 
         CID id = GetID(fullName);
@@ -152,7 +179,7 @@ namespace AudioControls
         if (!middlewareControl)
             return nullptr;
 
-        TConnectionPtr result;
+        TConnectionPtr connection;
 
         switch (middlewareControl->GetType())
         {
@@ -161,15 +188,15 @@ namespace AudioControls
                 switch (atlControlType)
                 {
                     case eACET_TRIGGER:
-                        result = AZStd::make_shared<CAudioFileToTriggerConnection>(middlewareControl->GetId());
+                        connection = AZStd::make_shared<CAudioFileToTriggerConnection>(middlewareControl->GetId());
                         break;
 
                     case eACET_RTPC:
-                        result = AZStd::make_shared<CAudioFileToRtpcConnection>(middlewareControl->GetId());
+                        connection = AZStd::make_shared<CAudioFileToRtpcConnection>(middlewareControl->GetId());
                         break;
 
                     case eACET_PRELOAD:
-                        result = AZStd::make_shared<IAudioConnection>(middlewareControl->GetId());
+                        connection = AZStd::make_shared<IAudioConnection>(middlewareControl->GetId());
                         break;
                 }
 
@@ -178,18 +205,18 @@ namespace AudioControls
 
             case ESoLoudControlType::GlobalRTPC:
             {
-                result = AZStd::make_shared<IAudioConnection>(middlewareControl->GetId());
+                connection = AZStd::make_shared<IAudioConnection>(middlewareControl->GetId());
                 break;
             }
         }
 
-        if (result)
+        if (connection)
         {
             middlewareControl->SetConnected(true);
             ++m_connectionsByID[middlewareControl->GetId()];
         }
 
-        return result;
+        return connection;
     }
 
     TConnectionPtr CAudioSystemEditor_SoLoud::CreateConnectionFromXMLNode(AZ::rapidxml::xml_node<char>* node,
@@ -206,17 +233,20 @@ namespace AudioControls
         // Connections from AudioFile.
         if (AZ::StringFunc::Equal(node->name(), AudioFileTag))
         {
-            const char* controlName = nullptr;
             auto attr = node->first_attribute(AudioFilePathTag);
-            if (!attr)
+            if (!attr || attr->value()[0] == '\0')
                 return nullptr;
+            const char* controlName = attr->value();
 
-            controlName = attr->value();
+            bool isLocalized = false;
+            attr = node->first_attribute(AudioFileLocalizedTag);
+            if (attr)
+                isLocalized = AZStd::stoi(AZStd::string(attr->value()));
 
-            control = GetControlByName(controlName);
+            control = GetControlByName(controlName, isLocalized);
             if (!control)
             {
-                control = CreateControl(SControlDef(controlName, ESoLoudControlType::AudioFile));
+                control = CreateControl(SControlDef(controlName, ESoLoudControlType::AudioFile, isLocalized));
                 control->SetPlaceholder(true);
             }
 
@@ -283,7 +313,7 @@ namespace AudioControls
         if (!control)
             return nullptr;
 
-        AZ::rapidxml::xml_node<char>* connNode = xmlAlloc.allocate_node(AZ::rapidxml::node_element);
+        AZ::rapidxml::xml_node<char>* connNode = m_xmlAlloc.allocate_node(AZ::rapidxml::node_element);
         const ESoLoudControlType::Type controlType = static_cast<ESoLoudControlType::Type>(control->GetType());
 
         switch (controlType)
@@ -292,7 +322,11 @@ namespace AudioControls
             {
                 connNode->name(AudioFileTag);
 
-                auto attr = xmlAlloc.allocate_attribute(AudioFilePathTag, xmlAlloc.allocate_string(control->GetName().c_str()));
+                auto attr = m_xmlAlloc.allocate_attribute(AudioFilePathTag, m_xmlAlloc.allocate_string(control->GetName().c_str()));
+                connNode->append_attribute(attr);
+
+                attr = m_xmlAlloc.allocate_attribute(AudioFileLocalizedTag,
+                    m_xmlAlloc.allocate_string(AZStd::to_string(control->IsLocalized()).c_str()));
                 connNode->append_attribute(attr);
 
                 switch (atlControlType)
@@ -300,14 +334,14 @@ namespace AudioControls
                     case eACET_TRIGGER:
                     {
                         const CAudioFileToTriggerConnection* conn = static_cast<const CAudioFileToTriggerConnection*>(connection.get());
-                        conn->m_params.WriteToXml(*connNode, xmlAlloc);
+                        conn->m_params.WriteToXml(*connNode, m_xmlAlloc);
                         break;
                     }
 
                     case eACET_RTPC:
                     {
                         const CAudioFileToRtpcConnection* conn = static_cast<const CAudioFileToRtpcConnection*>(connection.get());
-                        conn->m_params.WriteToXml(*connNode, xmlAlloc);
+                        conn->m_params.WriteToXml(*connNode, m_xmlAlloc);
                         break;
                     }
 
@@ -327,7 +361,7 @@ namespace AudioControls
                 if (rtpcType == EGlobalRtpc::Count)
                     return nullptr;
 
-                connNode->name(xmlAlloc.allocate_string(control->GetName().c_str()));
+                connNode->name(m_xmlAlloc.allocate_string(control->GetName().c_str()));
                 break;
             }
 
@@ -370,18 +404,17 @@ namespace AudioControls
         return (projectPath / "sounds" / "soloud");
     }
 
-    IAudioSystemControl* CAudioSystemEditor_SoLoud::GetControlByName(AZStd::string name, bool, IAudioSystemControl* parent) const
+    IAudioSystemControl* CAudioSystemEditor_SoLoud::GetControlByName(AZStd::string name, bool isLocalized, IAudioSystemControl*) const
     {
-        if (parent)
+        /*if (parent)
         {
             AZ::StringFunc::Path::Join(parent->GetName().c_str(), name.c_str(), name);
-        }
-
-        // TODO: implement localization handling.
-        /*if (isLocalized)
-        {
-            AZ::StringFunc::Path::Join(m_loader.GetLocalizationFolder().c_str(), name.c_str(), name);
         }*/
+
+        if (isLocalized)
+        {
+            AZ::StringFunc::Path::Join(m_currentLanguageName.c_str(), name.c_str(), name);
+        }
 
         return GetControl(GetID(name));
     }
@@ -391,43 +424,77 @@ namespace AudioControls
         return Audio::AudioStringToID<CID>(name.data());
     }
 
-    void CAudioSystemEditor_SoLoud::ScanAudioFilesAndCreateControls(AZStd::string_view folderPath)
+    void CAudioSystemEditor_SoLoud::ScanAudioFilesAndCreateControls(AZ::IO::PathView dirPathToScan, bool isInLocalizationDir)
     {
-        auto foundFiles = Audio::FindFilesInPath(folderPath, "*");
+        auto foundFiles = Audio::FindFilesInPath(dirPathToScan.Native(), "*");
 
-        for (const auto& filePath : foundFiles)
+        for (const auto& foundFilePath : foundFiles)
         {
-            AZ_Assert(AZ::IO::FileIOBase::GetInstance()->Exists(filePath.c_str()), "FindFiles found file '%s' but FileIO says it doesn't exist!",
-                filePath.c_str());
+            AZ_Assert(AZ::IO::FileIOBase::GetInstance()->Exists(foundFilePath.c_str()), "FindFiles found file '%s' but FileIO says it doesn't exist!",
+                foundFilePath.c_str());
 
-            if (AZ::IO::FileIOBase::GetInstance()->IsDirectory(filePath.c_str()))
-                ScanAudioFilesAndCreateControls(filePath.c_str());
-
-            AZStd::string ext;
-            AZ::StringFunc::Path::GetExtension(filePath.c_str(), ext, false);
-
-            bool formatSupported = false;
-            for (size_t i = 0; i < AZ_ARRAY_SIZE(Audio::AudioFileFormatsArray); ++i)
+            if (AZ::IO::FileIOBase::GetInstance()->IsDirectory(foundFilePath.c_str()))
             {
-                if (ext == Audio::AudioFileFormatsArray[i])
+                if (isInLocalizationDir)
                 {
-                    formatSupported = true;
-                    break;
+                    ScanAudioFilesAndCreateControls(foundFilePath, true);
+                }
+                else
+                {
+                    AZ::IO::FixedMaxPath dirPathRelToAudioBaseDir = foundFilePath;
+                    bool isLocalizationDir = foundFilePath.Filename() == Audio::LocalizationDirName;
+                    if (isLocalizationDir)
+                    {
+                        if (!m_currentLanguageName.empty())
+                        {
+                            dirPathRelToAudioBaseDir /= m_currentLanguageName;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+
+                    ScanAudioFilesAndCreateControls(dirPathRelToAudioBaseDir, isLocalizationDir);
                 }
             }
+            else
+            {
+                AZStd::string fileExt;
+                AZ::StringFunc::Path::GetExtension(foundFilePath.c_str(), fileExt, false);
 
-            if (!formatSupported)
-                continue;
+                bool isFormatSupported = false;
+                for (size_t i = 0; i < AZ_ARRAY_SIZE(Audio::AudioFileFormatsArray); ++i)
+                {
+                    if (fileExt == Audio::AudioFileFormatsArray[i])
+                    {
+                        isFormatSupported = true;
+                        break;
+                    }
+                }
 
-            AZStd::string localPath = filePath.c_str();
+                if (!isFormatSupported)
+                    continue;
 
-            AZ::StringFunc::Replace(localPath, '\\', '/');
-            Audio::EraseSubStr(localPath, Audio::AudioFilesPath);
-            if (localPath[0] == '/')
-                localPath.erase(0, 1);
+                AZ::IO::FixedMaxPath filePathRelToAudioBaseDir(foundFilePath.c_str(), ControlNamePathSeparator);
+                {
+                    AZ::IO::FixedMaxPath pathPartToErase = Audio::AudioFilesPath;
+                    if (isInLocalizationDir)
+                        pathPartToErase = pathPartToErase / Audio::LocalizationDirName / m_currentLanguageName;
 
-            SControlDef controlDef(localPath, ESoLoudControlType::AudioFile);
-            CreateControl(controlDef);
+                    AZStd::string tmpstr = filePathRelToAudioBaseDir.Native();
+                    Audio::EraseSubStr(tmpstr, pathPartToErase.Native());
+                    filePathRelToAudioBaseDir = tmpstr;
+                }
+
+                filePathRelToAudioBaseDir.MakePreferred();
+                filePathRelToAudioBaseDir = filePathRelToAudioBaseDir.RelativePath();
+                IAudioSystemControl* parentControl = isInLocalizationDir ? &m_localizedParentControl : nullptr;
+
+                SControlDef controlDef(filePathRelToAudioBaseDir.c_str(), ESoLoudControlType::AudioFile,
+                    isInLocalizationDir, parentControl);
+                CreateControl(controlDef);
+            }
         }
     }
 
