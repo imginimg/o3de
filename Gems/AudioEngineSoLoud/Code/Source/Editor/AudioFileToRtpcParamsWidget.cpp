@@ -11,7 +11,7 @@
 
 namespace AudioControls
 {
-    CAudioFileToRtpcParamsWidget::CAudioFileToRtpcParamsWidget(TConnectionPtr connection, QWidget* parent, Qt::WindowFlags f)
+    AudioFileToRtpcParamsWidget::AudioFileToRtpcParamsWidget(TConnectionPtr connection, QWidget* parent, Qt::WindowFlags f)
         : QWidget(parent, f)
         , m_connection(connection)
     {
@@ -19,7 +19,7 @@ namespace AudioControls
 
         setupUi(this);
 
-        AZ_Assert(m_rtpcTypeCB->count() == Audio::EAudioFileRtpc::Count, "m_rtpcTypeCB has wrong number of items.");
+        AZ_Assert(m_rtpcTypeCB->count() == Audio::AudioFileRtpc::Count, "m_rtpcTypeCB has wrong number of items.");
         AZ_Assert(m_rtpcScopeCB->count() == 2, "m_rtpcScopeCB has wrong number of items.");
 
         connect(m_rtpcTypeCB, SIGNAL(currentIndexChanged(int)), this, SLOT(OnRtpcTypeChanged(int)));
@@ -29,28 +29,30 @@ namespace AudioControls
         UpdateWidgetsFromConnection();
     }
 
-    void CAudioFileToRtpcParamsWidget::OnRtpcTypeChanged(int index)
+    void AudioFileToRtpcParamsWidget::OnRtpcTypeChanged(int index)
     {
         m_rtpcScopeCB->setEnabled(index == 0);
     }
 
-    void CAudioFileToRtpcParamsWidget::UpdateConnectionFromWidgets()
+    void AudioFileToRtpcParamsWidget::UpdateConnectionFromWidgets()
     {
         if (m_inUpdateWidgetsFromConnection)
+        {
             return;
+        }
 
-        CAudioFileToRtpcConnection* con = static_cast<CAudioFileToRtpcConnection*>(m_connection.get());
-        con->m_params.m_type = static_cast<Audio::EAudioFileRtpc::Type>(m_rtpcTypeCB->currentIndex());
+        AudioFileToRtpcConnection* con = static_cast<AudioFileToRtpcConnection*>(m_connection.get());
+        con->m_params.m_type = static_cast<Audio::AudioFileRtpc::Type>(m_rtpcTypeCB->currentIndex());
         con->m_params.m_perObject = m_rtpcScopeCB->currentIndex() == 1;
 
-        emit ParametersChanged();
+        emit PropertiesChanged();
     }
 
-    void CAudioFileToRtpcParamsWidget::UpdateWidgetsFromConnection()
+    void AudioFileToRtpcParamsWidget::UpdateWidgetsFromConnection()
     {
         m_inUpdateWidgetsFromConnection = true;
 
-        CAudioFileToRtpcConnection* con = static_cast<CAudioFileToRtpcConnection*>(m_connection.get());
+        AudioFileToRtpcConnection* con = static_cast<AudioFileToRtpcConnection*>(m_connection.get());
         m_rtpcTypeCB->setCurrentIndex(con->m_params.m_type);
         con->m_params.m_perObject ? m_rtpcScopeCB->setCurrentIndex(1) : m_rtpcScopeCB->setCurrentIndex(0);
 

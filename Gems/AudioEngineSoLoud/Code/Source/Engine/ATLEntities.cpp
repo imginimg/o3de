@@ -11,24 +11,31 @@
 
 namespace Audio
 {
-    bool SATLRtpcImplDataSoLoud::ReadFromXml(const AZ::rapidxml::xml_node<char>& node)
+    bool AtlRtpcImplDataSoLoud::ReadFromXml(const AZ::rapidxml::xml_node<char>& node)
     {
         if (AZ::StringFunc::Equal(node.name(), AudioFileTag))
         {
-            m_type = ERtpcImpl::AudioFile;
+            m_type = RtpcImpl::AudioFile;
 
             auto attr = node.first_attribute(AudioFilePathTag);
             if (!attr)
+            {
                 return false;
+            }
 
             m_audioFile.m_audioFilePath = attr->value();
-            if (m_audioFile.m_audioFilePath.empty() || m_audioFile.m_audioFilePath[0] == '\0')
+            if (m_audioFile.m_audioFilePath.empty())
+            {
                 return false;
+            }
 
             return m_audioFile.m_params.ReadFromXml(node);
         }
-
-        m_global.m_type = EGlobalRtpc::FromString(node.name());
-        return m_global.m_type != EGlobalRtpc::Count;
+        else
+        {
+            m_type = RtpcImpl::Global;
+            m_global.m_type = GlobalRtpc::FromString(node.name());
+            return m_global.m_type != GlobalRtpc::Count;
+        }
     }
 } // namespace Audio

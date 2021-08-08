@@ -153,11 +153,11 @@ namespace AudioControls
         //! Informs the plugin that the ACE has saved the data in case it needs to do any clean up.
         virtual void DataSaved() = 0;
 
-        //! Creates a widget for modifying connection parameters.
-        //! The widget must have a "ParametersChanged()" signal.
+        //! Creates a widget for modifying connection properties.
+        //! The widget must have a "PropertiesChanged()" signal.
         //! The widget ownership transferred to the caller.
-        virtual QWidget* CreateConnectionPropertiesWidget([[maybe_unused]] const TConnectionPtr connection,
-            [[maybe_unused]] EACEControlType atlControlType) { return nullptr; }
+        virtual QWidget* CreateConnectionPropertiesWidget([[maybe_unused]] const TConnectionPtr connection
+            , [[maybe_unused]] EACEControlType atlControlType) { return nullptr; }
     };
 
 } // namespace AudioControls

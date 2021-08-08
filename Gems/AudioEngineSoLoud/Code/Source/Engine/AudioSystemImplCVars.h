@@ -20,4 +20,4 @@ namespace Audio::CVars
     AZ_CVAR_EXTERNED(AZ::u32, s_SoLoud_MaxActiveVoiceCount);
     AZ_CVAR_EXTERNED(AZStd::string, s_SoLoud_CurrentBackend);
     AZ_CVAR_EXTERNED(AZ::u32, s_SoLoud_CurrentNumberOfChannels);
-}
+} // namespace Audio::CVars

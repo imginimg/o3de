@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include <AzCore/Console/IConsole.h>
 #include <AzCore/std/containers/unordered_map.h>
 #include <AzCore/std/smart_ptr/shared_ptr.h>
-#include <AzCore/Console/IConsole.h>
 #include <IAudioConnection.h>
 #include <IAudioInterfacesCommonData.h>
 #include <IAudioSystemControl.h>
@@ -44,12 +44,9 @@ namespace AudioControls
         // ~IAudioSystemEditor
 
     private:
-        constexpr static const char ControlNamePathSeparator = '/';
-
-
-        IAudioSystemControl* GetControlByName(AZStd::string name, bool isLocalized = false, IAudioSystemControl* parent = nullptr) const;
+        IAudioSystemControl* GetControlByName(AZStd::string name, bool isLocalized = false) const;
         CID GetID(const AZStd::string_view name) const;
-        void ScanAudioFilesAndCreateControls(AZ::IO::PathView dirPathToScan, bool localized = false);
+        void ScanAudioFilesAndCreateControlsRecursive(AZ::IO::PathView dirPathToScan, bool localized = false);
 
 
         AZStd::string m_currentLanguageName;

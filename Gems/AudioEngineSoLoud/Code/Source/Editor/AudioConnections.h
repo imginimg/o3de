@@ -13,10 +13,10 @@
 
 namespace AudioControls
 {
-    class CAudioFileToTriggerConnection : public IAudioConnection
+    class AudioFileToTriggerConnection : public IAudioConnection
     {
     public:
-        explicit CAudioFileToTriggerConnection(CID id)
+        explicit AudioFileToTriggerConnection(CID id)
             : IAudioConnection(id)
         {
         }
@@ -26,13 +26,13 @@ namespace AudioControls
             return true;
         }
 
-        Audio::SAudioFileToTriggerParams m_params;
+        Audio::AudioFileToTriggerParams m_params;
     };
 
-    class CAudioFileToRtpcConnection : public IAudioConnection
+    class AudioFileToRtpcConnection : public IAudioConnection
     {
     public:
-        explicit CAudioFileToRtpcConnection(CID id)
+        explicit AudioFileToRtpcConnection(CID id)
             : IAudioConnection(id)
         {
         }
@@ -42,6 +42,6 @@ namespace AudioControls
             return true;
         }
 
-        Audio::SAudioFileToRtpcParams m_params;
+        Audio::AudioFileToRtpcParams m_params;
     };
 } // namespace AudioControls

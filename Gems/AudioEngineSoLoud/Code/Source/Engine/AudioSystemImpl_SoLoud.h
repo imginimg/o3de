@@ -19,16 +19,16 @@ namespace SoLoud { class Wav; }
 
 namespace Audio
 {
-    struct SATLAudioObjectDataSoLoud;
+    struct AtlAudioObjectDataSoLoud;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    class CAudioSystemImpl_SoLoud : public AudioSystemImplementation
+    class AudioSystemImpl_SoLoud : public AudioSystemImplementation
     {
     public:
-        AUDIO_IMPL_CLASS_ALLOCATOR(CAudioSystemImpl_SoLoud)
+        AUDIO_IMPL_CLASS_ALLOCATOR(AudioSystemImpl_SoLoud)
 
-        explicit CAudioSystemImpl_SoLoud();
-        ~CAudioSystemImpl_SoLoud() override;
+        explicit AudioSystemImpl_SoLoud();
+        ~AudioSystemImpl_SoLoud() override;
 
         // AudioSystemImplementationNotificationBus
         void OnAudioSystemLoseFocus() override;
@@ -50,12 +50,12 @@ namespace Audio
         EAudioRequestStatus UpdateAudioObject(IATLAudioObjectData* objectData) override;
         EAudioRequestStatus PrepareTriggerSync(IATLAudioObjectData* audioObjectData, const IATLTriggerImplData* triggerData) override;
         EAudioRequestStatus UnprepareTriggerSync(IATLAudioObjectData* objectData, const IATLTriggerImplData* triggerData) override;
-        EAudioRequestStatus PrepareTriggerAsync(IATLAudioObjectData* objectData, const IATLTriggerImplData* triggerData,
-            IATLEventData* eventData) override;
-        EAudioRequestStatus UnprepareTriggerAsync(IATLAudioObjectData* pAudioObjectData, const IATLTriggerImplData* pTriggerData,
-            IATLEventData* pEventData) override;
-        EAudioRequestStatus ActivateTrigger(IATLAudioObjectData* objectData, const IATLTriggerImplData* triggerData,
-            IATLEventData* tventData, const SATLSourceData* sourceData) override;
+        EAudioRequestStatus PrepareTriggerAsync(IATLAudioObjectData* objectData, const IATLTriggerImplData* triggerData
+            , IATLEventData* eventData) override;
+        EAudioRequestStatus UnprepareTriggerAsync(IATLAudioObjectData* pAudioObjectData, const IATLTriggerImplData* pTriggerData
+            , IATLEventData* pEventData) override;
+        EAudioRequestStatus ActivateTrigger(IATLAudioObjectData* objectData, const IATLTriggerImplData* triggerData
+            , IATLEventData* tventData, const SATLSourceData* sourceData) override;
         EAudioRequestStatus StopEvent(IATLAudioObjectData* objectData, const IATLEventData* eventData) override;
         EAudioRequestStatus StopAllEvents(IATLAudioObjectData* objectData) override;
         EAudioRequestStatus SetPosition(IATLAudioObjectData* objectData, const SATLWorldPosition& worldPosition) override;
@@ -63,13 +63,14 @@ namespace Audio
         EAudioRequestStatus SetRtpc(IATLAudioObjectData* objectData, const IATLRtpcImplData* rtpcData, float value) override;
         EAudioRequestStatus SetSwitchState(IATLAudioObjectData* objectData, const IATLSwitchStateImplData* switchStateData) override;
         EAudioRequestStatus SetObstructionOcclusion(IATLAudioObjectData* objectData, float obstruction, float occlusion) override;
-        EAudioRequestStatus SetEnvironment(IATLAudioObjectData* objectData, const IATLEnvironmentImplData* environmentData,
-            float amount) override;
+        EAudioRequestStatus SetEnvironment(IATLAudioObjectData* objectData, const IATLEnvironmentImplData* environmentData
+            , float amount) override;
         EAudioRequestStatus SetListenerPosition(IATLListenerData* listenerData, const SATLWorldPosition& newPosition) override;
         EAudioRequestStatus ResetRtpc(IATLAudioObjectData* objectData, const IATLRtpcImplData* rtpcData) override;
         EAudioRequestStatus RegisterInMemoryFile(SATLAudioFileEntryInfo* audioFileEntry) override;
         EAudioRequestStatus UnregisterInMemoryFile(SATLAudioFileEntryInfo* audioFileEntry) override;
-        EAudioRequestStatus ParseAudioFileEntry(const AZ::rapidxml::xml_node<char>* audioFileEntryNode, SATLAudioFileEntryInfo* fileEntryInfo) override;
+        EAudioRequestStatus ParseAudioFileEntry(const AZ::rapidxml::xml_node<char>* audioFileEntryNode
+            , SATLAudioFileEntryInfo* fileEntryInfo) override;
         void DeleteAudioFileEntryData(IATLAudioFileEntryData* oldAudioFileEntryData) override;
         const char* const GetAudioFileLocation(SATLAudioFileEntryInfo* fileEntryInfo) override;
         IATLTriggerImplData* NewAudioTriggerImplData(const AZ::rapidxml::xml_node<char>* audioTriggerNode) override;
@@ -101,7 +102,7 @@ namespace Audio
 
     private:
         template<class T>
-        struct TDeleter
+        struct Deleter
         {
             void operator()(T* ptr)
             {
@@ -109,11 +110,11 @@ namespace Audio
             }
         };
 
-        using AudioObjectPtr = AZStd::unique_ptr<SATLAudioObjectDataSoLoud, TDeleter<SATLAudioObjectDataSoLoud>>;
-        using AudioSourcePtr = AZStd::unique_ptr<SoLoud::Wav, TDeleter<SoLoud::Wav>>;
+        using AudioObjectPtr = AZStd::unique_ptr<AtlAudioObjectDataSoLoud, Deleter<AtlAudioObjectDataSoLoud>>;
+        using AudioSourcePtr = AZStd::unique_ptr<SoLoud::Wav, Deleter<SoLoud::Wav>>;
 
 
-        void CheckObjectForExpiredHandles(SATLAudioObjectDataSoLoud& object);
+        void CheckObjectForExpiredHandles(AtlAudioObjectDataSoLoud& object);
         void MuteAll();
         void UnmuteAll();
 

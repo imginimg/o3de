@@ -17,24 +17,24 @@
 
 namespace Audio
 {
-    struct SATLEventDataSoLoud : public IATLEventData
+    struct AtlEventDataSoLoud : public IATLEventData
     {
         SoLoud::handle m_soloudHandle;
         bool m_isPlayEvent = false;
     };
 
-    struct SATLAudioFileEntryDataSoLoud : public IATLAudioFileEntryData
+    struct AtlAudioFileEntryDataSoLoud : public IATLAudioFileEntryData
     {
         AZStd::string m_fullFilePath;
     };
 
-    struct SATLTriggerImplDataSoLoud : public IATLTriggerImplData
+    struct AtlTriggerImplDataSoLoud : public IATLTriggerImplData
     {
         AZStd::string m_audioFilePath;
-        SAudioFileToTriggerParams m_audioFileToTriggerParams;
+        AudioFileToTriggerParams m_audioFileToTriggerParams;
     };
 
-    namespace ERtpcImpl
+    namespace RtpcImpl
     {
         enum Type
         {
@@ -43,36 +43,35 @@ namespace Audio
         };
     }
 
-    struct SATLRtpcImplDataSoLoud : public IATLRtpcImplData
+    struct AtlRtpcImplDataSoLoud : public IATLRtpcImplData
     {
-        ERtpcImpl::Type m_type = ERtpcImpl::Global;
+        RtpcImpl::Type m_type = RtpcImpl::Global;
 
         struct
         {
-            EGlobalRtpc::Type m_type = EGlobalRtpc::Count;
+            GlobalRtpc::Type m_type = GlobalRtpc::Count;
         } m_global;
 
         struct
         {
             AZStd::string m_audioFilePath;
-            SAudioFileToRtpcParams m_params;
+            AudioFileToRtpcParams m_params;
         } m_audioFile;
-
 
         bool ReadFromXml(const AZ::rapidxml::xml_node<char>& node);
     };
 
-    struct SActiveSoVoiceData
+    struct ActiveSoVoiceData
     {
         SoLoud::handle m_handle;
         float m_volume = 1.0f;
     };
 
-    struct SATLAudioObjectDataSoLoud : public IATLAudioObjectData
+    struct AtlAudioObjectDataSoLoud : public IATLAudioObjectData
     {
-        SATLWorldPosition m_pos;
+        AZ::Vector3 m_position;
 
-        // Key - audio file path, same as CAudioSystemImpl_SoLoud::m_audioSources.
-        AZStd::unordered_multimap<AZStd::string, SActiveSoVoiceData> m_activeSoVoices;
+        // Key - audio file path, same as AudioSystemImpl_SoLoud::m_audioSources.
+        AZStd::unordered_multimap<AZStd::string, ActiveSoVoiceData> m_activeSoVoices;
     };
 } // namespace Audio

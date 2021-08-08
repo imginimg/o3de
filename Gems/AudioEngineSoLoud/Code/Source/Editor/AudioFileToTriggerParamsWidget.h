@@ -14,18 +14,18 @@
 
 namespace AudioControls
 {
-    class CAudioFileToTriggerParamsWidget
+    class AudioFileToTriggerParamsWidget
         : public QWidget
         , private Ui::AudioFileToTriggerParamsWidget
     {
         Q_OBJECT
 
     public:
-        explicit CAudioFileToTriggerParamsWidget(TConnectionPtr connection, QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
-        ~CAudioFileToTriggerParamsWidget() = default;
+        explicit AudioFileToTriggerParamsWidget(TConnectionPtr connection, QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+        ~AudioFileToTriggerParamsWidget() = default;
 
     signals:
-        void ParametersChanged();
+        void PropertiesChanged();
 
     private slots:
         void OnActionChanged(int index);

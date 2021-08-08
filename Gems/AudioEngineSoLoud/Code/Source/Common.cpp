@@ -12,7 +12,7 @@
 
 namespace Audio
 {
-    AZ::u32 ESpeakerConfiguration::ToChannelCount(Type conf)
+    AZ::u32 SpeakerConfiguration::ToChannelCount(Type conf)
     {
         switch (conf)
         {
@@ -36,128 +36,132 @@ namespace Audio
         }
     }
 
-    const char* EAudioAction::ToString(Type type)
+    const char* AudioAction::ToString(Type type)
     {
-        static const char* strings[EAudioAction::Count] = { "Start", "Stop", "Pause", "Resume" };
+        static const char* strings[AudioAction::Count] = { "Start", "Stop", "Pause", "Resume" };
 
-        AZ_Assert(type < EAudioAction::Count, "Invalid EAudioAction value!");
+        AZ_Assert(type < AudioAction::Count, "Invalid AudioAction value!");
         return strings[type];
     }
 
-    EAudioAction::Type EAudioAction::FromString(const char* str)
+    AudioAction::Type AudioAction::FromString(const char* str)
     {
         if (AZ::StringFunc::Equal(str, "Start"))
         {
-            return EAudioAction::Start;
+            return AudioAction::Start;
         }
         else if (AZ::StringFunc::Equal(str, "Stop"))
         {
-            return EAudioAction::Stop;
+            return AudioAction::Stop;
         }
         else if (AZ::StringFunc::Equal(str, "Pause"))
         {
-            return EAudioAction::Pause;
+            return AudioAction::Pause;
         }
         else if (AZ::StringFunc::Equal(str, "Resume"))
         {
-            return EAudioAction::Resume;
+            return AudioAction::Resume;
         }
         else
         {
-            return EAudioAction::Count;
+            return AudioAction::Count;
         }
     }
 
-    const char* EAttenuationMode::ToString(Type type)
+    const char* AttenuationMode::ToString(Type type)
     {
-        static const char* strings[EAudioAction::Count] = { "NoAttenuation", "InverseDistance", "LinearDistance", "ExponentialDistance" };
+        static const char* strings[AudioAction::Count] = { "NoAttenuation", "InverseDistance", "LinearDistance", "ExponentialDistance" };
 
-        AZ_Assert(type < EAudioAction::Count, "Invalid EAttenuationMode value!");
+        AZ_Assert(type < AudioAction::Count, "Invalid AttenuationMode value!");
         return strings[type];
     }
 
-    EAttenuationMode::Type EAttenuationMode::FromString(const char* str)
+    AttenuationMode::Type AttenuationMode::FromString(const char* str)
     {
         if (AZ::StringFunc::Equal(str, "NoAttenuation"))
         {
-            return EAttenuationMode::NoAttenuation;
+            return AttenuationMode::NoAttenuation;
         }
         else if (AZ::StringFunc::Equal(str, "InverseDistance"))
         {
-            return EAttenuationMode::InverseDistance;
+            return AttenuationMode::InverseDistance;
         }
         else if (AZ::StringFunc::Equal(str, "LinearDistance"))
         {
-            return EAttenuationMode::LinearDistance;
+            return AttenuationMode::LinearDistance;
         }
         else if (AZ::StringFunc::Equal(str, "ExponentialDistance"))
         {
-            return EAttenuationMode::ExponentialDistance;
+            return AttenuationMode::ExponentialDistance;
         }
         else
         {
-            return EAttenuationMode::Count;
+            return AttenuationMode::Count;
         }
     }
 
-    void SAudioFileToTriggerParams::ReadFromXml(const AZ::rapidxml::xml_node<char>& node)
+    void AudioFileToTriggerParams::ReadFromXml(const AZ::rapidxml::xml_node<char>& node)
     {
-        auto attr = node.first_attribute(EAudioAction::Tag);
+        auto attr = node.first_attribute(AudioAction::Tag);
         if (attr)
         {
-            m_action = EAudioAction::FromString(attr->value());
-            if (m_action == EAudioAction::Count)
-                m_action = EAudioAction::Start;
+            m_action = AudioAction::FromString(attr->value());
+            if (m_action == AudioAction::Count)
+            {
+                m_action = AudioAction::Start;
+            }
         }
 
         attr = node.first_attribute(VolumeTag);
         if (attr)
         {
-            m_volume = AZStd::stof(AZStd::string(attr->value()));
+            m_volume = AZ::StringFunc::ToFloat(attr->value());
         }
 
         attr = node.first_attribute(MinDistanceTag);
         if (attr)
         {
-            m_minDistance = AZStd::stof(AZStd::string(attr->value()));
+            m_minDistance = AZ::StringFunc::ToFloat(attr->value());
         }
 
         attr = node.first_attribute(MaxDistanceTag);
         if (attr)
         {
-            m_maxDistance = AZStd::stof(AZStd::string(attr->value()));
+            m_maxDistance = AZ::StringFunc::ToFloat(attr->value());
         }
 
-        attr = node.first_attribute(EAttenuationMode::Tag);
+        attr = node.first_attribute(AttenuationMode::Tag);
         if (attr)
         {
-            m_attenuationMode = EAttenuationMode::FromString(attr->value());
-            if (m_attenuationMode == EAttenuationMode::Count)
-                m_attenuationMode = EAttenuationMode::NoAttenuation;
+            m_attenuationMode = AttenuationMode::FromString(attr->value());
+            if (m_attenuationMode == AttenuationMode::Count)
+            {
+                m_attenuationMode = AttenuationMode::NoAttenuation;
+            }
         }
 
         attr = node.first_attribute(AttenuationRolloffFactorTag);
         if (attr)
         {
-            m_attenuationRolloffFactor = AZStd::stof(AZStd::string(attr->value()));
+            m_attenuationRolloffFactor = AZ::StringFunc::ToFloat(attr->value());
         }
 
         attr = node.first_attribute(PositionalTag);
         if (attr)
         {
-            m_positional = AZStd::stoi(AZStd::string(attr->value()));
+            m_positional = AZ::StringFunc::ToBool(attr->value());
         }
 
         attr = node.first_attribute(LoopingTag);
         if (attr)
         {
-            m_looping = AZStd::stoi(AZStd::string(attr->value()));
+            m_looping = AZ::StringFunc::ToBool(attr->value());
         }
     }
 
-    void SAudioFileToTriggerParams::WriteToXml(AZ::rapidxml::xml_node<char>& node, AZ::rapidxml::memory_pool<>& xmlAlloc) const
+    void AudioFileToTriggerParams::WriteToXml(AZ::rapidxml::xml_node<char>& node, AZ::rapidxml::memory_pool<>& xmlAlloc) const
     {
-        auto attr = xmlAlloc.allocate_attribute(EAudioAction::Tag, EAudioAction::ToString(m_action));
+        auto attr = xmlAlloc.allocate_attribute(AudioAction::Tag, AudioAction::ToString(m_action));
         node.append_attribute(attr);
 
         attr = xmlAlloc.allocate_attribute(VolumeTag, xmlAlloc.allocate_string(AZStd::to_string(m_volume).c_str()));
@@ -169,7 +173,7 @@ namespace Audio
         attr = xmlAlloc.allocate_attribute(MaxDistanceTag, xmlAlloc.allocate_string(AZStd::to_string(m_maxDistance).c_str()));
         node.append_attribute(attr);
 
-        attr = xmlAlloc.allocate_attribute(EAttenuationMode::Tag, EAttenuationMode::ToString(m_attenuationMode));
+        attr = xmlAlloc.allocate_attribute(AttenuationMode::Tag, AttenuationMode::ToString(m_attenuationMode));
         node.append_attribute(attr);
 
         attr = xmlAlloc.allocate_attribute(AttenuationRolloffFactorTag, xmlAlloc.allocate_string(AZStd::to_string(m_attenuationRolloffFactor).c_str()));
@@ -182,86 +186,90 @@ namespace Audio
         node.append_attribute(attr);
     }
 
-    const char* EAudioFileRtpc::ToString(Type type)
+    const char* AudioFileRtpc::ToString(Type type)
     {
-        constexpr static const char* strings[EAudioAction::Count] = { "Volume", "PlaySpeed", "Seek" };
+        constexpr static const char* strings[AudioAction::Count] = { "Volume", "PlaySpeed", "Seek" };
 
-        AZ_Assert(type < EAudioFileRtpc::Count, "Invalid EAudioFileRtpc value!");
+        AZ_Assert(type < AudioFileRtpc::Count, "Invalid AudioFileRtpc value!");
         return strings[type];
     }
 
-    EAudioFileRtpc::Type EAudioFileRtpc::FromString(const char* str)
+    AudioFileRtpc::Type AudioFileRtpc::FromString(const char* str)
     {
         if (AZ::StringFunc::Equal(str, "Volume"))
         {
-            return EAudioFileRtpc::Volume;
+            return AudioFileRtpc::Volume;
         }
         else if (AZ::StringFunc::Equal(str, "PlaySpeed"))
         {
-            return EAudioFileRtpc::PlaySpeed;
+            return AudioFileRtpc::PlaySpeed;
         }
         else if (AZ::StringFunc::Equal(str, "Seek"))
         {
-            return EAudioFileRtpc::Seek;
+            return AudioFileRtpc::Seek;
         }
         else
         {
-            return EAudioFileRtpc::Count;
+            return AudioFileRtpc::Count;
         }
     }
 
-    bool SAudioFileToRtpcParams::ReadFromXml(const AZ::rapidxml::xml_node<char>& node)
+    bool AudioFileToRtpcParams::ReadFromXml(const AZ::rapidxml::xml_node<char>& node)
     {
-        auto attr = node.first_attribute(EAudioFileRtpc::Tag);
+        auto attr = node.first_attribute(AudioFileRtpc::Tag);
         if (attr)
         {
-            m_type = EAudioFileRtpc::FromString(attr->value());
-            if (m_type == EAudioAction::Count)
+            m_type = AudioFileRtpc::FromString(attr->value());
+            if (m_type == AudioAction::Count)
+            {
                 return false;
+            }
         }
 
         attr = node.first_attribute(PerObjectTag);
         if (attr)
         {
-            m_perObject = AZStd::stoi(AZStd::string(attr->value()));
+            m_perObject = AZ::StringFunc::ToBool(attr->value());
         }
 
         return true;
     }
 
-    void SAudioFileToRtpcParams::WriteToXml(AZ::rapidxml::xml_node<char>& node, AZ::rapidxml::memory_pool<>& xmlAlloc) const
+    void AudioFileToRtpcParams::WriteToXml(AZ::rapidxml::xml_node<char>& node, AZ::rapidxml::memory_pool<>& xmlAlloc) const
     {
-        auto attr = xmlAlloc.allocate_attribute(EAudioFileRtpc::Tag, EAudioFileRtpc::ToString(m_type));
+        auto attr = xmlAlloc.allocate_attribute(AudioFileRtpc::Tag, AudioFileRtpc::ToString(m_type));
         node.append_attribute(attr);
 
         attr = xmlAlloc.allocate_attribute(PerObjectTag, xmlAlloc.allocate_string(AZStd::to_string(m_perObject).c_str()));
         node.append_attribute(attr);
     }
 
-    const char* EGlobalRtpc::ToString(Type type)
+    const char* GlobalRtpc::ToString(Type type)
     {
-        static const char* strings[EAudioAction::Count] = { "GlobalVolume" };
+        static const char* strings[AudioAction::Count] = { "GlobalVolume" };
 
-        AZ_Assert(type < EGlobalRtpc::Count, "Invalid EGlobalRtpc value!");
+        AZ_Assert(type < GlobalRtpc::Count, "Invalid GlobalRtpc value!");
         return strings[type];
     }
 
-    EGlobalRtpc::Type EGlobalRtpc::FromString(const char* str)
+    GlobalRtpc::Type GlobalRtpc::FromString(const char* str)
     {
         if (AZ::StringFunc::Equal(str, "GlobalVolume"))
         {
-            return EGlobalRtpc::GlobalVolume;
+            return GlobalRtpc::GlobalVolume;
         }
         else
         {
-            return EGlobalRtpc::Count;
+            return GlobalRtpc::Count;
         }
     }
 
-    void EraseSubStr(AZStd::string& inOutStr, AZStd::string_view strToErase)
+    void EraseSubStr(AZStd::string& str, AZStd::string_view strToErase)
     {
-        auto pos = inOutStr.find(strToErase);
+        auto pos = str.find(strToErase);
         if (pos != AZStd::string::npos)
-            inOutStr.erase(pos, strToErase.length());
+        {
+            str.erase(pos, strToErase.length());
+        }
     }
 } // namespace Audio

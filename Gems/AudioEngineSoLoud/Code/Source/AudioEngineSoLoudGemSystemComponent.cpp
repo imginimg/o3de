@@ -98,7 +98,7 @@ namespace AudioEngineSoLoudGem
             AZ::AllocatorInstance<Audio::AudioImplAllocator>::Create(allocDesc);
         }
 
-        m_audioSystemImpl = AZStd::make_unique<Audio::CAudioSystemImpl_SoLoud>();
+        m_audioSystemImpl = AZStd::make_unique<Audio::AudioSystemImpl_SoLoud>();
         if (m_audioSystemImpl)
         {
             Audio::SAudioRequest oAudioRequestData;

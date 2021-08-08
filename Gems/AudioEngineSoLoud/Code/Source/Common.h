@@ -17,9 +17,9 @@ namespace Audio
 {
     constexpr static const char* LogWindow = "Audio SoLoud";
 
-    constexpr static const AZ::IO::FixedMaxPath AudioFilesPath = AZ::IO::FixedMaxPath("sounds/soloud").LexicallyNormal();
-    //constexpr static const char* AudioFilesPath = "sounds/soloud";
-    //constexpr static const char* CurrentLanguage = "english";
+    constexpr static const char ControlNamePathSeparator = '/';
+
+    constexpr static const auto AudioFilesPath = AZ::IO::FixedMaxPath("sounds/soloud").LexicallyNormal();
     constexpr static const char* LocalizationDirName = "localization";
     constexpr static const char* AudioFileFormatsArray[] = { "wav", "mp3", "ogg", "flac" };
 
@@ -28,7 +28,7 @@ namespace Audio
     constexpr static const char* AudioFileLocalizedTag = "Localized";
 
     //------------------------------------
-    namespace ESpeakerConfiguration
+    namespace SpeakerConfiguration
     {
         enum Type
         {
@@ -40,10 +40,10 @@ namespace Audio
         };
 
         AZ::u32 ToChannelCount(Type conf);
-    } // namespace ESpeakerConfiguration
+    } // namespace SpeakerConfiguration
 
     //------------------------------------
-    namespace EAudioAction
+    namespace AudioAction
     {
         enum Type
         {
@@ -58,10 +58,10 @@ namespace Audio
         constexpr static const char* Tag = "AudioAction";
 
         const char* ToString(Type type);
-        EAudioAction::Type FromString(const char* str);
-    } // namespace EAudioAction
+        AudioAction::Type FromString(const char* str);
+    } // namespace AudioAction
 
-    namespace EAttenuationMode
+    namespace AttenuationMode
     {
         // Must be in sync with SoLoud::AudioSource::ATTENUATION_MODELS.
         enum Type
@@ -78,14 +78,14 @@ namespace Audio
 
         const char* ToString(Type type);
         Type FromString(const char* str);
-    } // namespace EAttenuationMode
+    } // namespace AttenuationMode
 
-    struct SAudioFileToTriggerParams
+    struct AudioFileToTriggerParams
     {
-        EAudioAction::Type m_action = EAudioAction::Start;
+        AudioAction::Type m_action = AudioAction::Start;
         float m_volume = 1.0f;
         float m_minDistance = 0.1f, m_maxDistance = 10.0f;
-        EAttenuationMode::Type m_attenuationMode = EAttenuationMode::NoAttenuation;
+        AttenuationMode::Type m_attenuationMode = AttenuationMode::NoAttenuation;
         float m_attenuationRolloffFactor = 0.1f;
         bool m_positional = false;
         bool m_looping = false;
@@ -101,7 +101,7 @@ namespace Audio
         void WriteToXml(AZ::rapidxml::xml_node<char>& node, AZ::rapidxml::memory_pool<>& xmlAlloc) const;
     };
 
-    namespace EAudioFileRtpc
+    namespace AudioFileRtpc
     {
         enum Type
         {
@@ -118,9 +118,9 @@ namespace Audio
         Type FromString(const char* str);
     }
 
-    struct SAudioFileToRtpcParams
+    struct AudioFileToRtpcParams
     {
-        EAudioFileRtpc::Type m_type = EAudioFileRtpc::Volume;
+        AudioFileRtpc::Type m_type = AudioFileRtpc::Volume;
         bool m_perObject = false;
 
         constexpr static char* PerObjectTag = "PerObject";
@@ -129,7 +129,7 @@ namespace Audio
         void WriteToXml(AZ::rapidxml::xml_node<char>& node, AZ::rapidxml::memory_pool<>& xmlAlloc) const;
     };
 
-    namespace EGlobalRtpc
+    namespace GlobalRtpc
     {
         enum Type
         {
@@ -141,9 +141,9 @@ namespace Audio
         constexpr static const char* Tag = "GlobalRtpcType";
 
         const char* ToString(Type type);
-        EGlobalRtpc::Type FromString(const char* str);
-    } // namespace EGlobalRtpc
+        GlobalRtpc::Type FromString(const char* str);
+    } // namespace GlobalRtpc
 
     //------------------------------------
-    void EraseSubStr(AZStd::string& inOutStr, AZStd::string_view strToErase);
+    void EraseSubStr(AZStd::string& str, AZStd::string_view strToErase);
 } // namespace Audio

@@ -14,18 +14,18 @@
 
 namespace AudioControls
 {
-    class CAudioFileToRtpcParamsWidget
+    class AudioFileToRtpcParamsWidget
         : public QWidget
         , private Ui::AudioFileToRtpcParamsWidget
     {
         Q_OBJECT
 
     public:
-        explicit CAudioFileToRtpcParamsWidget(TConnectionPtr connection, QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
-        ~CAudioFileToRtpcParamsWidget() = default;
+        explicit AudioFileToRtpcParamsWidget(TConnectionPtr connection, QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+        ~AudioFileToRtpcParamsWidget() = default;
 
     signals:
-        void ParametersChanged();
+        void PropertiesChanged();
 
     private slots:
         void OnRtpcTypeChanged(int index);
