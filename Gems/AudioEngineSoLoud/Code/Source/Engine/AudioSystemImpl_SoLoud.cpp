@@ -187,7 +187,7 @@ namespace Audio
             return eARS_FAILURE;
         }
 
-        AZStd::string_view audioFilePath = audioSourceIt->first;
+        AZ::IO::FixedMaxPath audioFilePath = audioSourceIt->first;
         SoLoud::AudioSource* const audioSource = audioSourceIt->second.get();
 
         switch (trigger->m_audioFileToTriggerParams.m_action)
@@ -220,7 +220,7 @@ namespace Audio
 
                 event->m_isPlayEvent = true;
                 event->m_soloudHandle = sohandle;
-                object->m_activeSoVoices.emplace(audioFilePath, ActiveSoVoiceData{ sohandle, trigger->m_audioFileToTriggerParams.m_volume});
+                object->m_activeSoVoices.emplace(audioFilePath, ActiveSoVoiceData{ sohandle, trigger->m_audioFileToTriggerParams.m_volume });
                 break;
             }
 
@@ -342,86 +342,10 @@ namespace Audio
         switch (rtpc->m_type)
         {
             case RtpcImpl::Global:
-            {
-                switch (rtpc->m_global.m_type)
-                {
-                    case GlobalRtpc::GlobalVolume:
-                        m_soloud.setGlobalVolume(value);
-                        break;
-
-                    default:
-                        return eARS_FAILURE;
-                }
-                break;
-            }
+                return SetGlobalRtpc(*rtpc, value);
 
             case RtpcImpl::AudioFile:
-            {
-                auto audioSourceIt = m_audioSources.find(rtpc->m_audioFile.m_audioFilePath);
-                if (audioSourceIt == m_audioSources.end())
-                {
-                    return eARS_FAILURE;
-                }
-
-                SoLoud::AudioSource* const audioSource = audioSourceIt->second.get();
-                auto voiceRange = object->m_activeSoVoices.equal_range(audioSourceIt->first);
-
-                switch (rtpc->m_audioFile.m_params.m_type)
-                {
-                    case AudioFileRtpc::Volume:
-                    {
-                        if (rtpc->m_audioFile.m_params.m_perObject)
-                        {
-                            const float effectiveVoiceVolume = audioSource->mVolume * value;
-                            for (auto it = voiceRange.first; it != voiceRange.second; ++it)
-                            {
-                                it->second.m_volume = value;
-                                m_soloud.setVolume(it->second.m_handle, effectiveVoiceVolume);
-                            }
-                        }
-                        else
-                        {
-                            audioSource->setVolume(value);
-
-                            // Set volume on all currently playing instances.
-                            for (auto& obj : m_audioObjects)
-                            {
-                                for (auto pair : obj->m_activeSoVoices)
-                                {
-                                    const float effectiveVoiceVolume = pair.second.m_volume * value;
-                                    if (pair.first == rtpc->m_audioFile.m_audioFilePath)
-                                    {
-                                        m_soloud.setVolume(pair.second.m_handle, effectiveVoiceVolume);
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    }
-
-                    case AudioFileRtpc::PlaySpeed:
-                    {
-                        for (auto it = voiceRange.first; it != voiceRange.second; ++it)
-                        {
-                            m_soloud.setRelativePlaySpeed(it->second.m_handle, value);
-                        }
-                        break;
-                    }
-
-                    case AudioFileRtpc::Seek:
-                    {
-                        for (auto it = voiceRange.first; it != voiceRange.second; ++it)
-                        {
-                            m_soloud.seek(it->second.m_handle, value);
-                        }
-                        break;
-                    }
-
-                    default:
-                        return eARS_FAILURE; 
-                }
-                break;
-            }
+                return SetAudioFileRtpc(*object, *rtpc, value);
 
             default:
                 return eARS_FAILURE;
@@ -551,7 +475,7 @@ namespace Audio
         {
             fullFilePath = AZ::IO::FixedMaxPath(LocalizationDirName) / m_currentLanguageName / fullFilePath; 
         }
-        data->m_fullFilePath = fullFilePath.Native();
+        data->m_fullFilePath = fullFilePath;
 
         fileEntryInfo->pImplData = data;
         fileEntryInfo->sFileName = audioFilePath;
@@ -622,7 +546,7 @@ namespace Audio
             return nullptr;
         }
 
-        triggerImpl->m_audioFilePath = fullFilePath.Native();
+        triggerImpl->m_audioFilePath = fullFilePath;
         triggerImpl->m_audioFileToTriggerParams.ReadFromXml(*audioTriggerNode);
         return triggerImpl;
     }
@@ -807,7 +731,7 @@ namespace Audio
 
     void AudioSystemImpl_SoLoud::CheckObjectForExpiredHandles(AtlAudioObjectDataSoLoud& object)
     {
-        AZStd::vector<AZStd::unordered_multimap<AZStd::string, ActiveSoVoiceData>::iterator> iterators;
+        AZStd::vector<AZStd::unordered_multimap<AZ::IO::FixedMaxPath, ActiveSoVoiceData>::iterator> iterators;
         iterators.reserve(object.m_activeSoVoices.size());
 
         for (auto it = object.m_activeSoVoices.begin(); it != object.m_activeSoVoices.end(); ++it)
@@ -833,5 +757,93 @@ namespace Audio
     void AudioSystemImpl_SoLoud::UnmuteAll()
     {
         m_soloud.setGlobalVolume(m_globalVolume);
+    }
+
+    EAudioRequestStatus AudioSystemImpl_SoLoud::SetGlobalRtpc(const AtlRtpcImplDataSoLoud& rtpc, float value)
+    {
+        switch (rtpc.m_global.m_type)
+        {
+            case GlobalRtpc::GlobalVolume:
+                m_soloud.setGlobalVolume(value);
+                break;
+
+            default:
+                return eARS_FAILURE;
+        }
+
+        return eARS_SUCCESS;
+    }
+
+    EAudioRequestStatus AudioSystemImpl_SoLoud::SetAudioFileRtpc(
+        AtlAudioObjectDataSoLoud& object
+        , const AtlRtpcImplDataSoLoud& rtpc, float value)
+    {
+        auto audioSourceIt = m_audioSources.find(rtpc.m_audioFile.m_audioFilePath);
+        if (audioSourceIt == m_audioSources.end())
+        {
+            return eARS_FAILURE;
+        }
+
+        SoLoud::AudioSource* const audioSource = audioSourceIt->second.get();
+        auto voiceRange = object.m_activeSoVoices.equal_range(audioSourceIt->first);
+
+        switch (rtpc.m_audioFile.m_params.m_type)
+        {
+            case AudioFileRtpc::Volume:
+            {
+                if (rtpc.m_audioFile.m_params.m_perObject)
+                {
+                    const float effectiveVoiceVolume = audioSource->mVolume * value;
+
+                    for (auto it = voiceRange.first; it != voiceRange.second; ++it)
+                    {
+                        it->second.m_volume = value;
+                        m_soloud.setVolume(it->second.m_handle, effectiveVoiceVolume);
+                    }
+                }
+                else
+                {
+                    audioSource->setVolume(value);
+
+                    // Set volume on all currently playing instances.
+                    for (auto& obj : m_audioObjects)
+                    {
+                        for (auto pair : obj->m_activeSoVoices)
+                        {
+                            const float effectiveVoiceVolume = pair.second.m_volume * value;
+
+                            if (pair.first == rtpc.m_audioFile.m_audioFilePath)
+                            {
+                                m_soloud.setVolume(pair.second.m_handle, effectiveVoiceVolume);
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+
+            case AudioFileRtpc::PlaySpeed:
+            {
+                for (auto it = voiceRange.first; it != voiceRange.second; ++it)
+                {
+                    m_soloud.setRelativePlaySpeed(it->second.m_handle, value);
+                }
+                break;
+            }
+
+            case AudioFileRtpc::Seek:
+            {
+                for (auto it = voiceRange.first; it != voiceRange.second; ++it)
+                {
+                    m_soloud.seek(it->second.m_handle, value);
+                }
+                break;
+            }
+
+            default:
+                return eARS_FAILURE;
+        }
+
+        return eARS_SUCCESS;
     }
 } // namespace Audio

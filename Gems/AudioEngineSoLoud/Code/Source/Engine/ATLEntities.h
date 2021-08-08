@@ -25,12 +25,12 @@ namespace Audio
 
     struct AtlAudioFileEntryDataSoLoud : public IATLAudioFileEntryData
     {
-        AZStd::string m_fullFilePath;
+        AZ::IO::FixedMaxPath m_fullFilePath;
     };
 
     struct AtlTriggerImplDataSoLoud : public IATLTriggerImplData
     {
-        AZStd::string m_audioFilePath;
+        AZ::IO::FixedMaxPath m_audioFilePath;
         AudioFileToTriggerParams m_audioFileToTriggerParams;
     };
 
@@ -54,7 +54,7 @@ namespace Audio
 
         struct
         {
-            AZStd::string m_audioFilePath;
+            AZ::IO::FixedMaxPath m_audioFilePath;
             AudioFileToRtpcParams m_params;
         } m_audioFile;
 
@@ -72,6 +72,6 @@ namespace Audio
         AZ::Vector3 m_position;
 
         // Key - audio file path, same as AudioSystemImpl_SoLoud::m_audioSources.
-        AZStd::unordered_multimap<AZStd::string, ActiveSoVoiceData> m_activeSoVoices;
+        AZStd::unordered_multimap<AZ::IO::FixedMaxPath, ActiveSoVoiceData> m_activeSoVoices;
     };
 } // namespace Audio

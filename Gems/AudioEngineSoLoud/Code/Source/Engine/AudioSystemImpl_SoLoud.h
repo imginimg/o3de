@@ -20,6 +20,7 @@ namespace SoLoud { class Wav; }
 namespace Audio
 {
     struct AtlAudioObjectDataSoLoud;
+    struct AtlRtpcImplDataSoLoud;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     class AudioSystemImpl_SoLoud : public AudioSystemImplementation
@@ -118,11 +119,14 @@ namespace Audio
         void MuteAll();
         void UnmuteAll();
 
+        EAudioRequestStatus SetGlobalRtpc(const AtlRtpcImplDataSoLoud& rtpc, float value);
+        EAudioRequestStatus SetAudioFileRtpc(AtlAudioObjectDataSoLoud& object, const AtlRtpcImplDataSoLoud& rtpc, float value);
+
 
         SoLoud::Soloud m_soloud;
         float m_globalVolume;
         AZStd::unordered_set<AudioObjectPtr> m_audioObjects;
-        AZStd::unordered_map<AZStd::string, AudioSourcePtr> m_audioSources; // Key - audio file path.
+        AZStd::unordered_map<AZ::IO::FixedMaxPath, AudioSourcePtr> m_audioSources; // Key - audio file path.
         AZStd::string m_currentLanguageName;
         AZ::IO::FixedMaxPath m_localizationDirPath;
     };
