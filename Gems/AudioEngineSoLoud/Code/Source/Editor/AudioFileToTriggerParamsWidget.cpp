@@ -24,7 +24,7 @@ namespace AudioControls
 
         connect(m_actionCB, SIGNAL(currentIndexChanged(int)), this, SLOT(OnActionChanged(int)));
         connect(m_actionCB, SIGNAL(currentIndexChanged(int)), this, SLOT(UpdateConnectionFromWidgets()));
-        connect(m_volumeDSB, SIGNAL(editingFinished()), this, SLOT(UpdateConnectionFromWidgets()));
+        connect(m_volumeSB, SIGNAL(valueChanged(int)), this, SLOT(UpdateConnectionFromWidgets()));
         connect(m_loopingChB, SIGNAL(stateChanged(int)), this, SLOT(UpdateConnectionFromWidgets()));
         connect(m_positionalChB, SIGNAL(stateChanged(int)), this, SLOT(UpdateConnectionFromWidgets()));
         connect(m_attenuationModeCB, SIGNAL(currentIndexChanged(int)), this, SLOT(UpdateConnectionFromWidgets()));
@@ -49,7 +49,7 @@ namespace AudioControls
 
         AudioFileToTriggerConnection* con = static_cast<AudioFileToTriggerConnection*>(m_connection.get());
         con->m_params.m_action = static_cast<Audio::AudioAction::Type>(m_actionCB->currentIndex());
-        con->m_params.m_volume = m_volumeDSB->value();
+        con->m_params.m_volume = aznumeric_cast<float>(m_volumeSB->value());
         con->m_params.m_looping = m_loopingChB->isChecked();
         con->m_params.m_positional = m_positionalChB->isChecked();
         con->m_params.m_attenuationMode = static_cast<Audio::AttenuationMode::Type>(m_attenuationModeCB->currentIndex());
@@ -66,7 +66,7 @@ namespace AudioControls
 
         AudioFileToTriggerConnection* con = static_cast<AudioFileToTriggerConnection*>(m_connection.get());
         m_actionCB->setCurrentIndex(con->m_params.m_action);
-        m_volumeDSB->setValue(con->m_params.m_volume);
+        m_volumeSB->setValue(aznumeric_cast<int>(con->m_params.m_volume));
         m_loopingChB->setChecked(con->m_params.m_looping);
         m_positionalChB->setChecked(con->m_params.m_positional);
         m_attenuationModeCB->setCurrentIndex(con->m_params.m_attenuationMode);

@@ -195,14 +195,14 @@ namespace Audio
             case AudioAction::Start:
             {
                 SoLoud::handle sohandle;
-                const float effectiveVoiceVolume = audioSource->mVolume * trigger->m_audioFileToTriggerParams.m_volume;
+                const float linearVoiceVolume = DbToLinear(audioSource->mVolume + trigger->m_audioFileToTriggerParams.m_volume);
 
                 if (trigger->m_audioFileToTriggerParams.m_positional)
                 {
                     AZ::Vector3 posVec = object->m_position;
 
                     sohandle = m_soloud.play3d(*audioSource, posVec.GetX(), posVec.GetY(), posVec.GetZ(), 0.0f, 0.0f, 0.0f
-                        , effectiveVoiceVolume, true);
+                        , linearVoiceVolume, true);
 
                     m_soloud.set3dSourceAttenuation(sohandle, trigger->m_audioFileToTriggerParams.m_attenuationMode
                         , trigger->m_audioFileToTriggerParams.m_attenuationRolloffFactor);
@@ -212,7 +212,7 @@ namespace Audio
                 }
                 else
                 {
-                    sohandle = m_soloud.playBackground(*audioSource, effectiveVoiceVolume, true);
+                    sohandle = m_soloud.playBackground(*audioSource, linearVoiceVolume, true);
                 }
 
                 m_soloud.setLooping(sohandle, trigger->m_audioFileToTriggerParams.m_looping);
@@ -793,12 +793,12 @@ namespace Audio
             {
                 if (rtpc.m_audioFile.m_params.m_perObject)
                 {
-                    const float effectiveVoiceVolume = audioSource->mVolume * value;
+                    const float linearVoiceVolume = DbToLinear(audioSource->mVolume + value);
 
                     for (auto it = voiceRange.first; it != voiceRange.second; ++it)
                     {
                         it->second.m_volume = value;
-                        m_soloud.setVolume(it->second.m_handle, effectiveVoiceVolume);
+                        m_soloud.setVolume(it->second.m_handle, linearVoiceVolume);
                     }
                 }
                 else
@@ -810,11 +810,11 @@ namespace Audio
                     {
                         for (auto pair : obj->m_activeSoVoices)
                         {
-                            const float effectiveVoiceVolume = pair.second.m_volume * value;
+                            const float linearVoiceVolume = DbToLinear(pair.second.m_volume + value);
 
                             if (pair.first == rtpc.m_audioFile.m_audioFilePath)
                             {
-                                m_soloud.setVolume(pair.second.m_handle, effectiveVoiceVolume);
+                                m_soloud.setVolume(pair.second.m_handle, linearVoiceVolume);
                             }
                         }
                     }

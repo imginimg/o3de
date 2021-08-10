@@ -8,6 +8,7 @@
 
 #include <AzCore/StringFunc/StringFunc.h>
 #include <AzCore/std/string/conversions.h>
+#include <cmath>
 #include <Common.h>
 
 namespace Audio
@@ -271,5 +272,10 @@ namespace Audio
         {
             str.erase(pos, strToErase.length());
         }
+    }
+
+    float DbToLinear(float dbValue)
+    {
+        return std::exp(dbValue * 0.115129254f);
     }
 } // namespace Audio

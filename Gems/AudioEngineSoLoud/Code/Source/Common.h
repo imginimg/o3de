@@ -146,4 +146,6 @@ namespace Audio
 
     //------------------------------------
     void EraseSubStr(AZStd::string& str, AZStd::string_view strToErase);
+
+    float DbToLinear(float dbValue);
 } // namespace Audio
