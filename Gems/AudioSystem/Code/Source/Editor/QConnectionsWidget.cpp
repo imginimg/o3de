@@ -142,7 +142,7 @@ namespace AudioControls
 
                     if (widgetHasChangedSignal)
                     {
-                        connect(m_connectionPropertiesWidget, SIGNAL(ParametersChanged()), this, SLOT(CurrentConnectionModified()));
+                        connect(m_connectionPropertiesWidget, SIGNAL(PropertiesChanged()), this, SLOT(CurrentConnectionModified()));
                     }
                 }
             }
