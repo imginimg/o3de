@@ -12,12 +12,13 @@
 
 namespace Audio::CVars
 {
-    AZ_CVAR_EXTERNED(AZ::u64, s_SoLoud_MemoryPoolSize);
-    AZ_CVAR_EXTERNED(AZ::u32, s_SoLoud_SampleRate);
-    AZ_CVAR_EXTERNED(AZ::u32, s_SoLoud_Clipper);
-    AZ_CVAR_EXTERNED(AZ::u32, s_SoLoud_SpeakerConfiguration);
-    AZ_CVAR_EXTERNED(AZ::u32, s_SoLoud_MainResampler);
-    AZ_CVAR_EXTERNED(AZ::u32, s_SoLoud_MaxActiveVoiceCount);
+    AZ_CVAR_EXTERNED(uint64_t, s_SoLoud_MemoryPoolSize);
+    AZ_CVAR_EXTERNED(uint32_t, s_SoLoud_SampleRate);
+    AZ_CVAR_EXTERNED(uint32_t, s_SoLoud_Clipper);
+    AZ_CVAR_EXTERNED(float, s_SoLoud_PostClipScaler);
+    AZ_CVAR_EXTERNED(uint32_t, s_SoLoud_SpeakerConfiguration);
+    AZ_CVAR_EXTERNED(uint32_t, s_SoLoud_MainResampler);
+    AZ_CVAR_EXTERNED(uint32_t, s_SoLoud_MaxActiveVoiceCount);
     AZ_CVAR_EXTERNED(AZStd::string, s_SoLoud_CurrentBackend);
-    AZ_CVAR_EXTERNED(AZ::u32, s_SoLoud_CurrentNumberOfChannels);
+    AZ_CVAR_EXTERNED(uint32_t, s_SoLoud_CurrentNumberOfChannels);
 } // namespace Audio::CVars

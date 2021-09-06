@@ -7,6 +7,7 @@
  */
 
 #include <ATLEntities.h>
+
 #include <AzCore/StringFunc/StringFunc.h>
 
 namespace Audio

@@ -12,7 +12,7 @@
 namespace Audio::CVars
 {
     AZ_CVAR(
-        AZ::u64,
+        uint64_t,
         s_SoLoud_MemoryPoolSize,
         AZ_TRAIT_AUDIOENGINESOLOUD_POOL_SIZE,
         nullptr,
@@ -20,7 +20,7 @@ namespace Audio::CVars
         "The size in KiB of the memory pool used by the SoLoud audio integration.\n");
 
     AZ_CVAR(
-        AZ::u32,
+        uint32_t,
         s_SoLoud_Clipper,
         1,
         nullptr,
@@ -29,7 +29,15 @@ namespace Audio::CVars
         "Valid values: 0 - \"hard\" clipping to -1/+1, 1 - roundoff clipper\n");
 
     AZ_CVAR(
-        AZ::u32,
+        float,
+        s_SoLoud_PostClipScaler,
+        0.95f,
+        nullptr,
+        AZ::ConsoleFunctorFlags::Null,
+        "The post-clip scaler used by the SoLoud audio integration.\n");
+
+    AZ_CVAR(
+        uint32_t,
         s_SoLoud_SampleRate,
         44100,
         nullptr,
@@ -37,7 +45,7 @@ namespace Audio::CVars
         "The sample rate used by the SoLoud audio integration.\n");
 
     AZ_CVAR(
-        AZ::u32,
+        uint32_t,
         s_SoLoud_SpeakerConfiguration,
         1,
         nullptr,
@@ -46,7 +54,7 @@ namespace Audio::CVars
         "Valid values: 0 - Mono, 1 - Stereo, 2 - Quad, 3 - 5.1, 4 - 7.1.\n");
 
     AZ_CVAR(
-        AZ::u32,
+        uint32_t,
         s_SoLoud_MainResampler,
         1,
         nullptr,
@@ -55,7 +63,7 @@ namespace Audio::CVars
         "Valid values: 0 - Point, 1 - Linear, 2 - Catmull-Rom.\n");
 
     AZ_CVAR(
-        AZ::u32,
+        uint32_t,
         s_SoLoud_MaxActiveVoiceCount,
         16,
         nullptr,
@@ -72,7 +80,7 @@ namespace Audio::CVars
         "The current backend used by the SoLoud audio integration.\n");
 
     AZ_CVAR(
-        AZ::u32,
+        uint32_t,
         s_SoLoud_CurrentNumberOfChannels,
         0,
         nullptr,

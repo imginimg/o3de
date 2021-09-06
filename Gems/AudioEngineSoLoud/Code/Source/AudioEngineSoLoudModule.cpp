@@ -6,13 +6,12 @@
  *
  */
 
-#include <AzCore/PlatformDef.h>
-
 #include <AzCore/Memory/SystemAllocator.h>
+#include <AzCore/PlatformDef.h>
 #include <IGem.h>
 
+#include <AudioBusLayoutLoaderComponent.h>
 #include <AudioEngineSoLoudGemSystemComponent.h>
-
 
 namespace AudioEngineSoLoudGem
 {
@@ -29,6 +28,7 @@ namespace AudioEngineSoLoudGem
                 m_descriptors.end(),
                 {
                     AudioEngineSoLoudGemSystemComponent::CreateDescriptor(),
+                    Audio::AudioBusLayoutLoaderComponent::CreateDescriptor(),
                 });
         }
 

@@ -72,6 +72,8 @@ ly_add_target(
             Source/Engine
             ${pal_dir}
             ${common_dir}
+        PUBLIC
+            Include
     COMPILE_DEFINITIONS
         PUBLIC
             ${AUDIOENGINESOLOUD_COMPILEDEFINITIONS}

@@ -7,6 +7,11 @@
                     "params": "copy",
                     "productAssetType": "{D59B6A2E-1BC0-488C-959B-CF27E784D1D7}"
                 },
+                "RC SoLoudBusLayout": {
+                    "glob": "*.bus_layout",
+                    "params": "copy",
+                    "productAssetType": "{36E350B0-B6D7-4D9D-82EB-F497A97A5A34}"
+                },
                 "RC wav": {
                     "glob": "*.wav",
                     "params": "copy",

@@ -8,41 +8,17 @@
 
 #pragma once
 
+#include <AzCore/Name/Name.h>
 #include <AzCore/XML/rapidxml.h>
-#include <AzCore/base.h>
-#include <AzCore/std/string/string.h>
-#include <AzCore/IO/Path/Path.h>
+
+#include <BusData.h>
 
 namespace Audio
 {
-    constexpr static const char* LogWindow = "Audio SoLoud";
+    constexpr const char* AudioFileTag = "AudioFile";
+    constexpr const char* AudioFilePathTag = "AudioFilePath";
+    constexpr const char* AudioFileLocalizedTag = "Localized";
 
-    constexpr static const char ControlNamePathSeparator = '/';
-
-    constexpr static const auto AudioFilesPath = AZ::IO::FixedMaxPath("sounds/soloud").LexicallyNormal();
-    constexpr static const char* LocalizationDirName = "localization";
-    constexpr static const char* AudioFileFormatsArray[] = { "wav", "mp3", "ogg", "flac" };
-
-    constexpr static const char* AudioFileTag = "AudioFile";
-    constexpr static const char* AudioFilePathTag = "AudioFilePath";
-    constexpr static const char* AudioFileLocalizedTag = "Localized";
-
-    //------------------------------------
-    namespace SpeakerConfiguration
-    {
-        enum Type
-        {
-            Mono,
-            Stereo,
-            Quad,
-            _5_1,
-            _7_1
-        };
-
-        AZ::u32 ToChannelCount(Type conf);
-    } // namespace SpeakerConfiguration
-
-    //------------------------------------
     namespace AudioAction
     {
         enum Type
@@ -80,25 +56,54 @@ namespace Audio
         Type FromString(const char* str);
     } // namespace AttenuationMode
 
+    namespace InaudibleBehavior
+    {
+        enum Type
+        {
+            Pause,
+            Tick,
+            Kill,
+
+            Count
+        };
+
+        constexpr static const char* Tag = "InaudibleBehavior";
+
+        const char* ToString(Type type);
+        Type FromString(const char* str);
+    } // namespace InaudibleBehavior
+
     struct AudioFileToTriggerParams
     {
-        AudioAction::Type m_action = AudioAction::Start;
-        float m_volume = 1.0f;
-        float m_minDistance = 0.1f, m_maxDistance = 10.0f;
-        AttenuationMode::Type m_attenuationMode = AttenuationMode::NoAttenuation;
-        float m_attenuationRolloffFactor = 0.1f;
-        bool m_positional = false;
-        bool m_looping = false;
-
-        constexpr static char* VolumeTag = "Volume";
-        constexpr static char* MinDistanceTag = "MinDistance";
-        constexpr static char* MaxDistanceTag = "MaxDistance";
-        constexpr static char* AttenuationRolloffFactorTag = "AttenuationRolloffFactor";
-        constexpr static char* PositionalTag = "Positional";
-        constexpr static char* LoopingTag = "Looping";
+        AudioFileToTriggerParams() = default;
+        ~AudioFileToTriggerParams() = default;
 
         void ReadFromXml(const AZ::rapidxml::xml_node<char>& node);
         void WriteToXml(AZ::rapidxml::xml_node<char>& node, AZ::rapidxml::memory_pool<>& xmlAlloc) const;
+
+        constexpr static const char* AudioBusNameTag = "AudioBusName";
+        constexpr static const char* VolumeTag = "Volume";
+        constexpr static const char* MinDistanceTag = "MinDistance";
+        constexpr static const char* MaxDistanceTag = "MaxDistance";
+        constexpr static const char* AttenuationRolloffFactorTag = "AttenuationRolloffFactor";
+        constexpr static const char* PositionalTag = "Positional";
+        constexpr static const char* LoopingTag = "Looping";
+        constexpr static const char* ProtectedTag = "Protected";
+        constexpr static const char* PlaySpeedTag = "PlaySpeed";
+
+        AZ::Name m_audioBusName = AZ::Name(MasterBusName);
+        FilterBlockData m_filterBlock;
+        AudioAction::Type m_action = AudioAction::Start;
+        AttenuationMode::Type m_attenuationMode = AttenuationMode::NoAttenuation;
+        InaudibleBehavior::Type m_inaudibleBehavior = InaudibleBehavior::Pause;
+        float m_volume = 0.0f;
+        float m_playSpeed = 1.0f;
+        float m_minDistance = 0.1f;
+        float m_maxDistance = 10.0f;
+        float m_attenuationRolloffFactor = 0.1f;
+        bool m_positional = false;
+        bool m_looping = false;
+        bool m_protected = false;
     };
 
     namespace AudioFileRtpc
@@ -116,17 +121,20 @@ namespace Audio
 
         const char* ToString(Type type);
         Type FromString(const char* str);
-    }
+    } // namespace AudioFileRtpc
 
     struct AudioFileToRtpcParams
     {
-        AudioFileRtpc::Type m_type = AudioFileRtpc::Volume;
-        bool m_perObject = false;
-
-        constexpr static char* PerObjectTag = "PerObject";
+        AudioFileToRtpcParams() = default;
+        ~AudioFileToRtpcParams() = default;
 
         bool ReadFromXml(const AZ::rapidxml::xml_node<char>& node);
         void WriteToXml(AZ::rapidxml::xml_node<char>& node, AZ::rapidxml::memory_pool<>& xmlAlloc) const;
+
+        constexpr static const char* PerObjectTag = "PerObject";
+
+        AudioFileRtpc::Type m_type = AudioFileRtpc::Volume;
+        bool m_perObject = false;
     };
 
     namespace GlobalRtpc
@@ -143,9 +151,4 @@ namespace Audio
         const char* ToString(Type type);
         GlobalRtpc::Type FromString(const char* str);
     } // namespace GlobalRtpc
-
-    //------------------------------------
-    void EraseSubStr(AZStd::string& str, AZStd::string_view strToErase);
-
-    float DbToLinear(float dbValue);
 } // namespace Audio

@@ -6,15 +6,16 @@
  *
  */
 
-#include <AudioEngineSoLoudGemSystemComponent.h>
-
 #include <AzCore/PlatformDef.h>
 #include <AzCore/Serialization/EditContext.h>
 #include <AzCore/Serialization/SerializeContext.h>
 
+#include <AudioEngineSoLoudGemSystemComponent.h>
+#include <AudioEngineSoLoudRequestHandler.h>
 #include <AudioSystemImplCVars.h>
 #include <AudioSystemImpl_SoLoud.h>
-#include <Common.h>
+#include <Config.h>
+#include <EditorEngineInterop.h>
 
 #if defined(AUDIO_ENGINE_SOLOUD_EDITOR)
 #include <AudioSystemEditor_SoLoud.h>
@@ -37,6 +38,9 @@ namespace AudioEngineSoLoudGem
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true);
             }
         }
+
+        Audio::BusLayoutData::Reflect(context);
+        Audio::AudioEngineSoLoudRequestHandler::Reflect(context);
     }
 
     void AudioEngineSoLoudGemSystemComponent::GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided)

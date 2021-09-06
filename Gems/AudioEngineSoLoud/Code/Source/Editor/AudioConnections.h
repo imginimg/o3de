@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <Common.h>
+#include <AtlData.h>
 #include <IAudioConnection.h>
 
 namespace AudioControls
@@ -20,6 +20,8 @@ namespace AudioControls
             : IAudioConnection(id)
         {
         }
+
+        ~AudioFileToTriggerConnection() = default;
 
         bool HasProperties() override
         {
@@ -36,6 +38,8 @@ namespace AudioControls
             : IAudioConnection(id)
         {
         }
+
+        ~AudioFileToRtpcConnection() = default;
 
         bool HasProperties() override
         {

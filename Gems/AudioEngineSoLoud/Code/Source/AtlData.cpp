@@ -6,37 +6,13 @@
  *
  */
 
+#include <AtlData.h>
+
 #include <AzCore/StringFunc/StringFunc.h>
 #include <AzCore/std/string/conversions.h>
-#include <cmath>
-#include <Common.h>
 
 namespace Audio
 {
-    AZ::u32 SpeakerConfiguration::ToChannelCount(Type conf)
-    {
-        switch (conf)
-        {
-            case Mono:
-                return 1;
-
-            case Stereo:
-                return 2;
-
-            case Quad:
-                return 4;
-
-            case _5_1:
-                return 6;
-
-            case _7_1:
-                return 8;
-
-            default:
-                return 2;
-        }
-    }
-
     const char* AudioAction::ToString(Type type)
     {
         static const char* strings[AudioAction::Count] = { "Start", "Stop", "Pause", "Resume" };
@@ -71,9 +47,10 @@ namespace Audio
 
     const char* AttenuationMode::ToString(Type type)
     {
-        static const char* strings[AudioAction::Count] = { "NoAttenuation", "InverseDistance", "LinearDistance", "ExponentialDistance" };
+        static const char* strings[AttenuationMode::Count] = { "NoAttenuation", "InverseDistance", "LinearDistance",
+                                                               "ExponentialDistance" };
 
-        AZ_Assert(type < AudioAction::Count, "Invalid AttenuationMode value!");
+        AZ_Assert(type < AttenuationMode::Count, "Invalid AttenuationMode value!");
         return strings[type];
     }
 
@@ -101,9 +78,43 @@ namespace Audio
         }
     }
 
+    const char* InaudibleBehavior::ToString(Type type)
+    {
+        static const char* strings[InaudibleBehavior::Count] = { "Pause", "Tick", "Kill" };
+
+        AZ_Assert(type < InaudibleBehavior::Count, "Invalid InaudibleBehavior value!");
+        return strings[type];
+    }
+
+    InaudibleBehavior::Type InaudibleBehavior::FromString(const char* str)
+    {
+        if (AZ::StringFunc::Equal(str, "Pause"))
+        {
+            return InaudibleBehavior::Pause;
+        }
+        else if (AZ::StringFunc::Equal(str, "Tick"))
+        {
+            return InaudibleBehavior::Tick;
+        }
+        else if (AZ::StringFunc::Equal(str, "Kill"))
+        {
+            return InaudibleBehavior::Kill;
+        }
+        else
+        {
+            return InaudibleBehavior::Count;
+        }
+    }
+
     void AudioFileToTriggerParams::ReadFromXml(const AZ::rapidxml::xml_node<char>& node)
     {
-        auto attr = node.first_attribute(AudioAction::Tag);
+        auto attr = node.first_attribute(AudioBusNameTag);
+        if (attr)
+        {
+            m_audioBusName = attr->value();
+        }
+
+        attr = node.first_attribute(AudioAction::Tag);
         if (attr)
         {
             m_action = AudioAction::FromString(attr->value());
@@ -158,11 +169,42 @@ namespace Audio
         {
             m_looping = AZ::StringFunc::ToBool(attr->value());
         }
+
+        attr = node.first_attribute(ProtectedTag);
+        if (attr)
+        {
+            m_protected = AZ::StringFunc::ToBool(attr->value());
+        }
+
+        attr = node.first_attribute(InaudibleBehavior::Tag);
+        if (attr)
+        {
+            m_inaudibleBehavior = InaudibleBehavior::FromString(attr->value());
+            if (m_inaudibleBehavior == InaudibleBehavior::Count)
+            {
+                m_inaudibleBehavior = InaudibleBehavior::Pause;
+            }
+        }
+
+        attr = node.first_attribute(PlaySpeedTag);
+        if (attr)
+        {
+            m_playSpeed = AZ::StringFunc::ToFloat(attr->value());
+        }
+
+        auto blockNode = node.first_node(FilterBlockData::Tag);
+        if (blockNode)
+        {
+            m_filterBlock.ReadFromXml(*blockNode);
+        }
     }
 
     void AudioFileToTriggerParams::WriteToXml(AZ::rapidxml::xml_node<char>& node, AZ::rapidxml::memory_pool<>& xmlAlloc) const
     {
-        auto attr = xmlAlloc.allocate_attribute(AudioAction::Tag, AudioAction::ToString(m_action));
+        auto attr = xmlAlloc.allocate_attribute(AudioBusNameTag, m_audioBusName.GetCStr());
+        node.append_attribute(attr);
+
+        attr = xmlAlloc.allocate_attribute(AudioAction::Tag, AudioAction::ToString(m_action));
         node.append_attribute(attr);
 
         attr = xmlAlloc.allocate_attribute(VolumeTag, xmlAlloc.allocate_string(AZStd::to_string(m_volume).c_str()));
@@ -177,7 +219,8 @@ namespace Audio
         attr = xmlAlloc.allocate_attribute(AttenuationMode::Tag, AttenuationMode::ToString(m_attenuationMode));
         node.append_attribute(attr);
 
-        attr = xmlAlloc.allocate_attribute(AttenuationRolloffFactorTag, xmlAlloc.allocate_string(AZStd::to_string(m_attenuationRolloffFactor).c_str()));
+        attr = xmlAlloc.allocate_attribute(
+            AttenuationRolloffFactorTag, xmlAlloc.allocate_string(AZStd::to_string(m_attenuationRolloffFactor).c_str()));
         node.append_attribute(attr);
 
         attr = xmlAlloc.allocate_attribute(PositionalTag, xmlAlloc.allocate_string(AZStd::to_string(m_positional).c_str()));
@@ -185,11 +228,24 @@ namespace Audio
 
         attr = xmlAlloc.allocate_attribute(LoopingTag, xmlAlloc.allocate_string(AZStd::to_string(m_looping).c_str()));
         node.append_attribute(attr);
+
+        attr = xmlAlloc.allocate_attribute(ProtectedTag, xmlAlloc.allocate_string(AZStd::to_string(m_protected).c_str()));
+        node.append_attribute(attr);
+
+        attr = xmlAlloc.allocate_attribute(InaudibleBehavior::Tag, InaudibleBehavior::ToString(m_inaudibleBehavior));
+        node.append_attribute(attr);
+
+        attr = xmlAlloc.allocate_attribute(PlaySpeedTag, xmlAlloc.allocate_string(AZStd::to_string(m_playSpeed).c_str()));
+        node.append_attribute(attr);
+
+        auto blockNode = xmlAlloc.allocate_node(AZ::rapidxml::node_element);
+        m_filterBlock.WriteToXml(*blockNode, xmlAlloc);
+        node.append_node(blockNode);
     }
 
     const char* AudioFileRtpc::ToString(Type type)
     {
-        constexpr static const char* strings[AudioAction::Count] = { "Volume", "PlaySpeed", "Seek" };
+        constexpr static const char* strings[AudioFileRtpc::Count] = { "Volume", "PlaySpeed", "Seek" };
 
         AZ_Assert(type < AudioFileRtpc::Count, "Invalid AudioFileRtpc value!");
         return strings[type];
@@ -247,7 +303,7 @@ namespace Audio
 
     const char* GlobalRtpc::ToString(Type type)
     {
-        static const char* strings[AudioAction::Count] = { "GlobalVolume" };
+        static const char* strings[GlobalRtpc::Count] = { "GlobalVolume" };
 
         AZ_Assert(type < GlobalRtpc::Count, "Invalid GlobalRtpc value!");
         return strings[type];
@@ -264,18 +320,5 @@ namespace Audio
             return GlobalRtpc::Count;
         }
     }
-
-    void EraseSubStr(AZStd::string& str, AZStd::string_view strToErase)
-    {
-        auto pos = str.find(strToErase);
-        if (pos != AZStd::string::npos)
-        {
-            str.erase(pos, strToErase.length());
-        }
-    }
-
-    float DbToLinear(float dbValue)
-    {
-        return std::exp(dbValue * 0.115129254f);
-    }
 } // namespace Audio
+

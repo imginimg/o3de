@@ -16,10 +16,16 @@
 #include <IAudioSystemControl.h>
 #include <IAudioSystemEditor.h>
 
+#include <QObject>
+
 namespace AudioControls
 {
-    class CAudioSystemEditor_SoLoud : public IAudioSystemEditor
+    class CAudioSystemEditor_SoLoud
+        : public QObject
+        , public IAudioSystemEditor
     {
+        Q_OBJECT
+
     public:
         CAudioSystemEditor_SoLoud();
         ~CAudioSystemEditor_SoLoud() = default;
@@ -33,7 +39,8 @@ namespace AudioControls
         TImplControlTypeMask GetCompatibleTypes(EACEControlType atlControlType) const override;
         TConnectionPtr CreateConnectionToControl(EACEControlType atlControlType, IAudioSystemControl* middlewareControl) override;
         TConnectionPtr CreateConnectionFromXMLNode(AZ::rapidxml::xml_node<char>* node, EACEControlType atlControlType) override;
-        AZ::rapidxml::xml_node<char>* CreateXMLNodeFromConnection(const TConnectionPtr connection, const EACEControlType atlControlType) override;
+        AZ::rapidxml::xml_node<char>* CreateXMLNodeFromConnection(
+            const TConnectionPtr connection, const EACEControlType atlControlType) override;
         void ConnectionRemoved(IAudioSystemControl* middlewareControl) override;
         const AZStd::string_view GetTypeIcon(TImplControlType type) const override;
         const AZStd::string_view GetTypeIconSelected(TImplControlType type) const override;
@@ -43,11 +50,15 @@ namespace AudioControls
         QWidget* CreateConnectionPropertiesWidget(const TConnectionPtr connection, EACEControlType atlControlType) override;
         // ~IAudioSystemEditor
 
+    protected:
+        constexpr static const int NotificationsProcessingIntervalMs = 0;
+
+        void timerEvent(QTimerEvent* event) override;
+
     private:
         IAudioSystemControl* GetControlByName(AZStd::string name, bool isLocalized = false) const;
         CID GetID(const AZStd::string_view name) const;
         void ScanAudioFilesAndCreateControlsRecursive(AZ::IO::PathView dirPathToScan, bool localized = false);
-
 
         AZStd::string m_currentLanguageName;
         IAudioSystemControl m_rootControl;

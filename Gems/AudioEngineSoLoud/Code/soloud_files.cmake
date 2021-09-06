@@ -66,15 +66,6 @@ set(FILES
     Source/soloud/src/core/soloud_queue.cpp
     Source/soloud/src/core/soloud_thread.cpp
 
-
-    Source/soloud/src/backend/alsa/soloud_alsa.cpp
-    Source/soloud/src/backend/coreaudio/soloud_coreaudio.cpp
-    Source/soloud/src/backend/opensles/soloud_opensles.cpp
-    Source/soloud/src/backend/oss/soloud_oss.cpp
-    Source/soloud/src/backend/wasapi/soloud_wasapi.cpp
-    Source/soloud/src/backend/xaudio2/soloud_xaudio2.cpp
-    Source/soloud/src/backend/winmm/soloud_winmm.cpp
-
     Source/soloud/src/audiosource/wav/dr_flac.h
     Source/soloud/src/audiosource/wav/dr_impl.cpp
     Source/soloud/src/audiosource/wav/dr_mp3.h
@@ -83,6 +74,26 @@ set(FILES
     Source/soloud/src/audiosource/wav/soloud_wavstream.cpp
     Source/soloud/src/audiosource/wav/stb_vorbis.c
     Source/soloud/src/audiosource/wav/stb_vorbis.h
+
+    Source/soloud/src/filter/soloud_bassboostfilter.cpp
+    Source/soloud/src/filter/soloud_biquadresonantfilter.cpp
+    Source/soloud/src/filter/soloud_dcremovalfilter.cpp
+    Source/soloud/src/filter/soloud_echofilter.cpp
+    Source/soloud/src/filter/soloud_eqfilter.cpp
+    Source/soloud/src/filter/soloud_fftfilter.cpp
+    Source/soloud/src/filter/soloud_flangerfilter.cpp
+    Source/soloud/src/filter/soloud_freeverbfilter.cpp
+    Source/soloud/src/filter/soloud_lofifilter.cpp
+    Source/soloud/src/filter/soloud_robotizefilter.cpp
+    Source/soloud/src/filter/soloud_waveshaperfilter.cpp
+
+    Source/soloud/src/backend/alsa/soloud_alsa.cpp
+    Source/soloud/src/backend/coreaudio/soloud_coreaudio.cpp
+    Source/soloud/src/backend/opensles/soloud_opensles.cpp
+    Source/soloud/src/backend/oss/soloud_oss.cpp
+    Source/soloud/src/backend/wasapi/soloud_wasapi.cpp
+    Source/soloud/src/backend/xaudio2/soloud_xaudio2.cpp
+    Source/soloud/src/backend/winmm/soloud_winmm.cpp
 )
 
 set(SKIP_UNITY_BUILD_INCLUSION_FILES

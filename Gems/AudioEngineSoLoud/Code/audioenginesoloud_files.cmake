@@ -7,16 +7,33 @@
 #
 
 set(FILES
+    Include/AudioEngineSoloud/AudioEngineSoloud.h
+
     Source/AudioEngineSoLoudGemSystemComponent.h
     Source/AudioEngineSoLoudGemSystemComponent.cpp
+    Source/Util.h
+    Source/Util.cpp
+    Source/EditorEngineInterop.h
+    Source/BusData.h
+    Source/BusData.cpp
+    Source/AtlData.h
+    Source/AtlData.cpp
+    Source/Config.h
+
     Source/Engine/AudioSystemImpl_SoLoud.h
     Source/Engine/AudioSystemImpl_SoLoud.cpp
     Source/Engine/ATLEntities.cpp
     Source/Engine/ATLEntities.h
     Source/Engine/AudioSystemImplCVars.h
     Source/Engine/AudioSystemImplCVars.cpp
-    Source/Common.h
-    Source/Common.cpp
+    Source/Engine/AudioBusManager.h
+    Source/Engine/AudioBusManager.cpp
+    Source/Engine/AudioFilterManager.h
+    Source/Engine/AudioFilterManager.cpp
+    Source/Engine/AudioEngineSoLoudRequestHandler.h
+    Source/Engine/AudioEngineSoLoudRequestHandler.cpp
+    Source/Engine/AudioBusLayoutLoaderComponent.h
+    Source/Engine/AudioBusLayoutLoaderComponent.cpp
 )
 
 # Skip the following file that is also used in the editor shared target so the compiler will recognize its the same symbol

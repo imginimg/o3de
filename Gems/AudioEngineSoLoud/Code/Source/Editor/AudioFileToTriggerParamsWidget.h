@@ -8,33 +8,46 @@
 
 #pragma once
 
-#include <ACETypes.h>
 #include <QWidget>
+
+#include <ACETypes.h>
+
+#include <EditorEngineInterop.h>
 #include <ui_AudioFileToTriggerParamsWidget.h>
 
 namespace AudioControls
 {
+    class AudioFilterListWidget;
+
     class AudioFileToTriggerParamsWidget
         : public QWidget
         , private Ui::AudioFileToTriggerParamsWidget
+        , private Audio::AudioBusManagerNotificationBus::Handler
     {
         Q_OBJECT
 
     public:
-        explicit AudioFileToTriggerParamsWidget(TConnectionPtr connection, QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
-        ~AudioFileToTriggerParamsWidget() = default;
+        explicit AudioFileToTriggerParamsWidget(
+            TConnectionPtr connection, QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+        ~AudioFileToTriggerParamsWidget();
 
     signals:
         void PropertiesChanged();
 
     private slots:
         void OnActionChanged(int index);
+        void OnVolumeChanged();
         void UpdateConnectionFromWidgets();
 
     private:
+        // AudioBusManagerNotifications
+        void OnUpdateAudioBusNames(AZStd::vector<AZ::Name> busNames) override;
+        // ~AudioBusManagerNotifications
+
         void UpdateWidgetsFromConnection();
 
         TConnectionPtr m_connection;
+        AudioFilterListWidget* m_filterListWidget = nullptr;
         bool m_inUpdateWidgetsFromConnection = false;
     };
 } // namespace AudioControls

@@ -477,7 +477,12 @@ namespace SoLoud
 
 	void FreeverbFilterInstance::filter(float* aBuffer, unsigned int aSamples, unsigned int aBufferSize, unsigned int aChannels, float aSamplerate, time aTime)
 	{
-		SOLOUD_ASSERT(aChannels == 2); // Only stereo supported at this time
+		//SOLOUD_ASSERT(aChannels == 2); // Only stereo supported at this
+		if (aChannels != 2)
+		{
+			return;
+		}
+
 		if (mParamChanged)
 		{
 			mModel->setdamp(mParam[DAMP]);

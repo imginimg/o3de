@@ -6,12 +6,16 @@
  *
  */
 
-#include <ATLEntities.h>
-#include <AudioSystemImplCVars.h>
-#include <AudioSystemImpl_SoLoud.h>
+#include <AzCore/Debug/Profiler.h>
 #include <AzCore/StringFunc/StringFunc.h>
 #include <AzCore/base.h>
-#include <Common.h>
+#include <AzCore/Name/Name.h>
+
+#include <ATLEntities.h>
+#include <AudioEngineSoLoud/AudioEngineSoloud.h>
+#include <AudioSystemImplCVars.h>
+#include <AudioSystemImpl_SoLoud.h>
+#include <AtlData.h>
 #include <soloud_wav.h>
 
 namespace Audio
@@ -55,20 +59,24 @@ namespace Audio
 
     void AudioSystemImpl_SoLoud::Update(float)
     {
-        AZ_PROFILE_FUNCTION(AZ::Debug::ProfileCategory::Audio);
+        AZ_PROFILE_FUNCTION(Audio);
+
+        AudioEngineSoLoudRequestBus::ExecuteQueuedEvents();
+        AudioBusManagerRequestBus::ExecuteQueuedEvents();
 
         m_soloud.update3dAudio();
     }
 
     EAudioRequestStatus AudioSystemImpl_SoLoud::Initialize()
     {
-        AZ::u32 initFlags = 0;
+        uint32_t initFlags = 0;
         if (CVars::s_SoLoud_Clipper)
         {
             initFlags |= SoLoud::Soloud::CLIP_ROUNDOFF;
         }
 
-        const AZ::u32 channelCount = SpeakerConfiguration::ToChannelCount((SpeakerConfiguration::Type)(AZ::u32) CVars::s_SoLoud_SpeakerConfiguration);
+        const uint32_t channelCount =
+            SpeakerConfiguration::ToChannelCount((SpeakerConfiguration::Type)(uint32_t)CVars::s_SoLoud_SpeakerConfiguration);
 
         auto result = m_soloud.init(initFlags, SoLoud::Soloud::AUTO, CVars::s_SoLoud_SampleRate, SoLoud::Soloud::AUTO, channelCount);
         if (result != SoLoud::SO_NO_ERROR)
@@ -79,17 +87,25 @@ namespace Audio
 
         m_soloud.setMainResampler(CVars::s_SoLoud_MainResampler);
         m_soloud.setMaxActiveVoiceCount(CVars::s_SoLoud_MaxActiveVoiceCount);
+        m_soloud.setPostClipScaler(CVars::s_SoLoud_PostClipScaler);
 
         CVars::s_SoLoud_CurrentBackend = m_soloud.getBackendString();
         CVars::s_SoLoud_CurrentNumberOfChannels = m_soloud.getBackendChannels();
         CVars::s_SoLoud_SampleRate = m_soloud.getBackendSamplerate();
         m_globalVolume = m_soloud.getGlobalVolume();
 
+        m_audioFilterManager.Reset();
+
+        m_audioBusManager = AZStd::make_unique<AudioBusManager>(m_soloud, m_audioFilterManager);
+        m_audioBusManager->ActivateAllBuses();
+
         return eARS_SUCCESS;
     }
 
     EAudioRequestStatus AudioSystemImpl_SoLoud::ShutDown()
     {
+        m_audioBusManager.reset();
+
         m_audioSources.clear();
         m_audioObjects.clear();
 
@@ -104,8 +120,6 @@ namespace Audio
 
     EAudioRequestStatus AudioSystemImpl_SoLoud::StopAllSounds()
     {
-        m_soloud.stopAll();
-
         for (auto& object : m_audioObjects)
         {
             object->m_activeSoVoices.clear();
@@ -138,7 +152,7 @@ namespace Audio
 
     EAudioRequestStatus AudioSystemImpl_SoLoud::UpdateAudioObject(IATLAudioObjectData* objectData)
     {
-        AZ_PROFILE_FUNCTION(AZ::Debug::ProfileCategory::Audio);
+        AZ_PROFILE_FUNCTION(Audio);
 
         if (!objectData)
         {
@@ -169,8 +183,8 @@ namespace Audio
         return eARS_FAILURE;
     }
 
-    EAudioRequestStatus AudioSystemImpl_SoLoud::ActivateTrigger(IATLAudioObjectData* objectData, const IATLTriggerImplData* triggerData
-        , IATLEventData* eventData, const SATLSourceData*)
+    EAudioRequestStatus AudioSystemImpl_SoLoud::ActivateTrigger(
+        IATLAudioObjectData* objectData, const IATLTriggerImplData* triggerData, IATLEventData* eventData, const SATLSourceData*)
     {
         auto object = static_cast<AtlAudioObjectDataSoLoud*>(objectData);
         auto trigger = static_cast<const AtlTriggerImplDataSoLoud*>(triggerData);
@@ -189,44 +203,103 @@ namespace Audio
 
         AZ::IO::FixedMaxPath audioFilePath = audioSourceIt->first;
         SoLoud::AudioSource* const audioSource = audioSourceIt->second.get();
+        const AudioFileToTriggerParams& params = trigger->m_audioFileToTriggerParams;
 
-        switch (trigger->m_audioFileToTriggerParams.m_action)
+        switch (params.m_action)
         {
             case AudioAction::Start:
             {
                 SoLoud::handle sohandle;
-                const float linearVoiceVolume = DbToLinear(audioSource->mVolume + trigger->m_audioFileToTriggerParams.m_volume);
+                const float linearVoiceVolume = DbToLinear(audioSource->mVolume + params.m_volume);
 
-                if (trigger->m_audioFileToTriggerParams.m_positional)
+                AudioBus* bus = m_audioBusManager->GetBus(params.m_audioBusName);
+                if (!bus)
+                {
+                    AZ_Warning(
+                        LogWindow, false,
+                        "Unable to play audio file \"%s\" on bus \"%s\" because the bus with this name doesn't exist. Falling back to the Master bus.",
+                        trigger->m_audioFilePath.c_str(), params.m_audioBusName.GetCStr());
+
+                    bus = m_audioBusManager->GetBus(AZ::Name(MasterBusName));
+                    AZ_Assert(bus, "The Master bus doesn't exist.");
+                }
+
+                if (params.m_positional)
                 {
                     AZ::Vector3 posVec = object->m_position;
 
-                    sohandle = m_soloud.play3d(*audioSource, posVec.GetX(), posVec.GetY(), posVec.GetZ(), 0.0f, 0.0f, 0.0f
-                        , linearVoiceVolume, true);
+                    sohandle = bus->Play3d(
+                        *audioSource, posVec.GetX(), posVec.GetY(), posVec.GetZ(), 0.0f, 0.0f, 0.0f, linearVoiceVolume, true);
 
-                    m_soloud.set3dSourceAttenuation(sohandle, trigger->m_audioFileToTriggerParams.m_attenuationMode
-                        , trigger->m_audioFileToTriggerParams.m_attenuationRolloffFactor);
-
-                    m_soloud.set3dSourceMinMaxDistance(sohandle, trigger->m_audioFileToTriggerParams.m_minDistance
-                        , trigger->m_audioFileToTriggerParams.m_maxDistance);
+                    m_soloud.set3dSourceAttenuation(sohandle, params.m_attenuationMode, params.m_attenuationRolloffFactor);
+                    m_soloud.set3dSourceMinMaxDistance(sohandle, params.m_minDistance, params.m_maxDistance);
                 }
                 else
                 {
-                    sohandle = m_soloud.playBackground(*audioSource, linearVoiceVolume, true);
+                    sohandle = bus->PlayBackground(*audioSource, linearVoiceVolume, true);
                 }
 
-                m_soloud.setLooping(sohandle, trigger->m_audioFileToTriggerParams.m_looping);
+                const FilterBlockData& filterBlock = params.m_filterBlock;
+                for (int32_t filterIndex = 0; filterIndex < filterBlock.m_filters.size(); ++filterIndex)
+                {
+                    const FilterData& filterData = filterBlock.m_filters[filterIndex];
+                    if (filterData.m_name.IsEmpty() || !filterData.m_isEnabled)
+                    {
+                        continue;
+                    }
+
+                    AudioFilter* filter = m_audioFilterManager.GetFilter(filterData.m_name);
+                    if (filter)
+                    {
+                        SetVoiceFilter(sohandle, filterIndex, filter->GetSoloudFilter());
+                    }
+                    else
+                    {
+                        AZ_Error(LogWindow, false, "Filter '%s' doesn't exist.", filterData.m_name.GetCStr());
+                        continue;
+                    }
+
+                    for (int32_t paramIndex = 0;
+                        paramIndex < filterBlock.m_filters.size() && paramIndex < filter->GetSoloudFilter()->getParamCount();
+                        ++paramIndex)
+                    {
+                        m_soloud.setFilterParameter(sohandle, filterIndex, paramIndex, filterData.m_params[paramIndex].m_value);
+                    }
+                }
+
+                switch (params.m_inaudibleBehavior)
+                {
+                    case InaudibleBehavior::Pause:
+                        m_soloud.setInaudibleBehavior(sohandle, false, false);
+                        break;
+
+                    case InaudibleBehavior::Tick:
+                        m_soloud.setInaudibleBehavior(sohandle, true, false);
+                        break;
+
+                    case InaudibleBehavior::Kill:
+                        m_soloud.setInaudibleBehavior(sohandle, false, true);
+                        break;
+                }
+
+                m_soloud.setProtectVoice(sohandle, params.m_protected);
+                m_soloud.setRelativePlaySpeed(sohandle, params.m_playSpeed);
+                m_soloud.setLooping(sohandle, params.m_looping);
                 m_soloud.setPause(sohandle, false);
 
                 event->m_isPlayEvent = true;
                 event->m_soloudHandle = sohandle;
-                object->m_activeSoVoices.emplace(audioFilePath, ActiveSoVoiceData{ sohandle, trigger->m_audioFileToTriggerParams.m_volume });
+                object->m_activeSoVoices.emplace(audioFilePath, ActiveSoVoiceData{ sohandle, params.m_volume });
                 break;
             }
 
             case AudioAction::Stop:
             {
-                audioSource->stop();
+                auto range = object->m_activeSoVoices.equal_range(audioFilePath);
+                for (auto it = range.first; it != range.second; ++it)
+                {
+                    m_soloud.stop(it->second.m_handle);
+                }
                 object->m_activeSoVoices.erase(audioFilePath);
                 break;
             }
@@ -273,7 +346,7 @@ namespace Audio
         if (!event->m_isPlayEvent)
         {
             return eARS_SUCCESS;
-        }            
+        }
 
         m_soloud.stop(event->m_soloudHandle);
 
@@ -350,8 +423,6 @@ namespace Audio
             default:
                 return eARS_FAILURE;
         }
-
-        return eARS_SUCCESS;
     }
 
     EAudioRequestStatus AudioSystemImpl_SoLoud::SetSwitchState(IATLAudioObjectData*, const IATLSwitchStateImplData*)
@@ -377,8 +448,9 @@ namespace Audio
         AZ::Vector3 atVec = newPosition.GetForwardVec();
         AZ::Vector3 upVec = newPosition.GetUpVec();
 
-        m_soloud.set3dListenerParameters(posVec.GetX(), posVec.GetY(), posVec.GetZ(), atVec.GetX(), atVec.GetY()
-            , atVec.GetZ(), upVec.GetX(), upVec.GetY(), upVec.GetZ());
+        m_soloud.set3dListenerParameters(
+            posVec.GetX(), posVec.GetY(), posVec.GetZ(), atVec.GetX(), atVec.GetY(), atVec.GetZ(), upVec.GetX(), upVec.GetY(),
+            upVec.GetZ());
 
         return eARS_SUCCESS;
     }
@@ -402,11 +474,12 @@ namespace Audio
             return eARS_FAILURE;
         }
 
-        auto result = audioSource->loadMem(static_cast<const unsigned char*>(audioFileEntry->pFileData)
-            , aznumeric_cast<uint32_t>(audioFileEntry->nSize), false, false);
+        auto result = audioSource->loadMem(
+            static_cast<const unsigned char*>(audioFileEntry->pFileData), aznumeric_cast<uint32_t>(audioFileEntry->nSize), false, false);
         if (result != SoLoud::SO_NO_ERROR)
         {
-            AZ_Error(LogWindow, false, "Unable to load audio file \"%s\"! %s", data->m_fullFilePath.c_str(), m_soloud.getErrorString(result));
+            AZ_Error(
+                LogWindow, false, "Unable to load audio file \"%s\"! %s", data->m_fullFilePath.c_str(), m_soloud.getErrorString(result));
             return eARS_FAILURE;
         }
 
@@ -432,8 +505,8 @@ namespace Audio
         return eARS_SUCCESS;
     }
 
-    EAudioRequestStatus AudioSystemImpl_SoLoud::ParseAudioFileEntry(const AZ::rapidxml::xml_node<char>* audioFileEntryNode
-        , SATLAudioFileEntryInfo* fileEntryInfo)
+    EAudioRequestStatus AudioSystemImpl_SoLoud::ParseAudioFileEntry(
+        const AZ::rapidxml::xml_node<char>* audioFileEntryNode, SATLAudioFileEntryInfo* fileEntryInfo)
     {
         if (!audioFileEntryNode || !fileEntryInfo)
         {
@@ -473,7 +546,7 @@ namespace Audio
         AZ::IO::FixedMaxPath fullFilePath = audioFilePath;
         if (isLocalized)
         {
-            fullFilePath = AZ::IO::FixedMaxPath(LocalizationDirName) / m_currentLanguageName / fullFilePath; 
+            fullFilePath = AZ::IO::FixedMaxPath(LocalizationDirName) / m_currentLanguageName / fullFilePath;
         }
         data->m_fullFilePath = fullFilePath;
 
@@ -536,11 +609,11 @@ namespace Audio
         AZ::IO::FixedMaxPath fullFilePath = audioFilePath;
         if (isLocalized)
         {
-            fullFilePath = AZ::IO::FixedMaxPath(LocalizationDirName) / m_currentLanguageName / fullFilePath; 
+            fullFilePath = AZ::IO::FixedMaxPath(LocalizationDirName) / m_currentLanguageName / fullFilePath;
         }
 
-        AtlTriggerImplDataSoLoud* triggerImpl = azcreate(AtlTriggerImplDataSoLoud, (), Audio::AudioImplAllocator
-            , "AtlTriggerImplDataSoLoud");
+        AtlTriggerImplDataSoLoud* triggerImpl =
+            azcreate(AtlTriggerImplDataSoLoud, (), Audio::AudioImplAllocator, "AtlTriggerImplDataSoLoud");
         if (!triggerImpl)
         {
             return nullptr;
@@ -701,7 +774,8 @@ namespace Audio
     void AudioSystemImpl_SoLoud::GetMemoryInfo(SAudioImplMemoryInfo& memoryInfo) const
     {
         memoryInfo.nPrimaryPoolSize = AZ::AllocatorInstance<Audio::AudioImplAllocator>::Get().Capacity();
-        memoryInfo.nPrimaryPoolUsedSize = memoryInfo.nPrimaryPoolSize - AZ::AllocatorInstance<Audio::AudioImplAllocator>::Get().NumAllocatedBytes();
+        memoryInfo.nPrimaryPoolUsedSize =
+            memoryInfo.nPrimaryPoolSize - AZ::AllocatorInstance<Audio::AudioImplAllocator>::Get().NumAllocatedBytes();
         memoryInfo.nPrimaryPoolAllocations = 0;
         memoryInfo.nSecondaryPoolSize = 0;
         memoryInfo.nSecondaryPoolUsedSize = 0;
@@ -759,12 +833,41 @@ namespace Audio
         m_soloud.setGlobalVolume(m_globalVolume);
     }
 
+    void AudioSystemImpl_SoLoud::SetVoiceFilter(SoLoud::handle voiceHandle, uint32_t filterIndex, SoLoud::Filter* filter)
+    {
+        // Dirty-hack-zone begin.
+        if (filterIndex >= FILTERS_PER_STREAM)
+        {
+            return;
+        }
+
+        m_soloud.lockAudioMutex_internal();
+        int voiceId = m_soloud.getVoiceFromHandle_internal(voiceHandle);
+        if (voiceId == -1)
+        {
+            m_soloud.unlockAudioMutex_internal();
+            return;
+        }
+
+        SoLoud::AudioSourceInstance* inst = m_soloud.mVoice[voiceId];
+        delete inst->mFilter[filterIndex];
+        inst->mFilter[filterIndex] = nullptr;
+
+        if (filter)
+        {
+            inst->mFilter[filterIndex] = filter->createInstance();
+        }
+
+        m_soloud.unlockAudioMutex_internal();
+        // Dirty-hack-zone end.
+    }
+
     EAudioRequestStatus AudioSystemImpl_SoLoud::SetGlobalRtpc(const AtlRtpcImplDataSoLoud& rtpc, float value)
     {
         switch (rtpc.m_global.m_type)
         {
             case GlobalRtpc::GlobalVolume:
-                m_soloud.setGlobalVolume(value);
+                m_soloud.setGlobalVolume(DbToLinear(value));
                 break;
 
             default:
@@ -774,8 +877,7 @@ namespace Audio
         return eARS_SUCCESS;
     }
 
-    EAudioRequestStatus AudioSystemImpl_SoLoud::SetAudioFileRtpc(
-        AtlAudioObjectDataSoLoud& object
+    EAudioRequestStatus AudioSystemImpl_SoLoud::SetAudioFileRtpc(AtlAudioObjectDataSoLoud& object
         , const AtlRtpcImplDataSoLoud& rtpc, float value)
     {
         auto audioSourceIt = m_audioSources.find(rtpc.m_audioFile.m_audioFilePath);
@@ -803,7 +905,7 @@ namespace Audio
                 }
                 else
                 {
-                    audioSource->setVolume(value);
+                    audioSource->setVolume(DbToLinear(value));
 
                     // Set volume on all currently playing instances.
                     for (auto& obj : m_audioObjects)

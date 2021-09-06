@@ -16,4 +16,20 @@ set(FILES
     Source/Editor/AudioFileToRtpcParamsWidget.h
     Source/Editor/AudioFileToRtpcParamsWidget.cpp
     Source/Editor/AudioFileToRtpcParamsWidget.ui
+    Source/Editor/AudioBusManagerWindow.h
+    Source/Editor/AudioBusManagerWindow.cpp
+    Source/Editor/AudioBusManagerWindow.ui
+    Source/Editor/AudioBusWidget.h
+    Source/Editor/AudioBusWidget.cpp
+    Source/Editor/AudioBusWidget.ui
+    Source/Editor/AudioFilterListWidget.h
+    Source/Editor/AudioFilterListWidget.cpp
+    Source/Editor/AudioFilterListItemWidget.h
+    Source/Editor/AudioFilterListItemWidget.cpp
+    Source/Editor/AudioFilterParamsWidget.h
+    Source/Editor/AudioFilterParamsWidget.cpp
+    Source/Editor/VuMeterWidget.h
+    Source/Editor/VuMeterWidget.cpp
+    Source/Editor/PropertyLayoutFilePathCtrl.h
+    Source/Editor/PropertyLayoutFilePathCtrl.cpp
 )
