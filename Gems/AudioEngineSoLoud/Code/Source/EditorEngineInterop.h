@@ -14,7 +14,7 @@
 #include <AzCore/std/containers/vector.h>
 #include <AzCore/std/string/string.h>
 
-#include <AudioEngineSoLoud/AudioEngineSoloud.h>
+#include <AudioEngineSoLoud/AudioEngineSoLoud.h>
 #include <BusData.h>
 
 namespace Audio
@@ -63,7 +63,7 @@ namespace Audio
     public:
         static const AZ::EBusHandlerPolicy HandlerPolicy = AZ::EBusHandlerPolicy::Multiple;
         static const AZ::EBusAddressPolicy AddressPolicy = AZ::EBusAddressPolicy::Single;
-        using MutexType = AZStd::mutex;
+        using MutexType = AZStd::recursive_mutex;
         static const bool EnableEventQueue = true;
 
         virtual ~AudioBusManagerNotifications() = default;

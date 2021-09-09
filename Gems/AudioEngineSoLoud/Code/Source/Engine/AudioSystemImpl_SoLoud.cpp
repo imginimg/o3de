@@ -12,7 +12,7 @@
 #include <AzCore/Name/Name.h>
 
 #include <ATLEntities.h>
-#include <AudioEngineSoLoud/AudioEngineSoloud.h>
+#include <AudioEngineSoLoud/AudioEngineSoLoud.h>
 #include <AudioSystemImplCVars.h>
 #include <AudioSystemImpl_SoLoud.h>
 #include <AtlData.h>

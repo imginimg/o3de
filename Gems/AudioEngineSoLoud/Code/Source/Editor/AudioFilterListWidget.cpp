@@ -236,7 +236,7 @@ namespace AudioControls
         for (size_t i = 0; i < filterData.size(); ++i)
         {
             QAction* action = m_filterTypesMenu->addAction(filterData[i].m_name.GetCStr());
-            action->setData(i + 1);
+            action->setData(static_cast<uint32_t>(i + 1));
         }
 
         if (!m_isBusMode)

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <AudioEngineSoLoud/AudioEngineSoloud.h>
+#include <AudioEngineSoLoud/AudioEngineSoLoud.h>
 
 #include <AzCore/RTTI/BehaviorContext.h>
 

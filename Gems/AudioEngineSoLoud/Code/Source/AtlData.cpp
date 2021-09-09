@@ -277,7 +277,7 @@ namespace Audio
         if (attr)
         {
             m_type = AudioFileRtpc::FromString(attr->value());
-            if (m_type == AudioAction::Count)
+            if (m_type == AudioFileRtpc::Count)
             {
                 return false;
             }

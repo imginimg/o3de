@@ -7,7 +7,7 @@
 #
 
 set(FILES
-    Include/AudioEngineSoloud/AudioEngineSoloud.h
+    Include/AudioEngineSoLoud/AudioEngineSoLoud.h
 
     Source/AudioEngineSoLoudGemSystemComponent.h
     Source/AudioEngineSoLoudGemSystemComponent.cpp

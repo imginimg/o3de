@@ -9,7 +9,6 @@
 ly_get_list_relative_pal_filename(pal_dir ${CMAKE_CURRENT_LIST_DIR}/Platform/${PAL_PLATFORM_NAME})
 ly_get_list_relative_pal_filename(common_dir ${CMAKE_CURRENT_LIST_DIR}/Platform/Common)
 
-include(${pal_dir}/soloud_${PAL_PLATFORM_NAME_LOWERCASE}.cmake)
 include(${pal_dir}/PAL_${PAL_PLATFORM_NAME_LOWERCASE}.cmake) #for PAL_TRAIT_AUDIO_ENGINE_SOLOUD Traits
 
 set(AUDIOENGINESOLOUD_COMPILEDEFINITIONS
@@ -52,13 +51,9 @@ ly_add_target(
             Source/soloud
         PUBLIC
             Source/soloud/include
-    COMPILE_DEFINITIONS
-        PRIVATE
-            ${SOLOUD_COMPILEDEFINITIONS}
-    TARGET_PROPERTIES
-        COMPILE_FLAGS
-            ${SOLOUD_COMPILE_FLAGS}
 )
+include(${common_dir}/soloud_common.cmake)
+include(${pal_dir}/soloud_${PAL_PLATFORM_NAME_LOWERCASE}.cmake)
 
 ly_add_target(
     NAME AudioEngineSoLoud.Static STATIC

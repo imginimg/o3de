@@ -89,8 +89,14 @@ set(FILES
 
     Source/soloud/src/backend/alsa/soloud_alsa.cpp
     Source/soloud/src/backend/coreaudio/soloud_coreaudio.cpp
+    Source/soloud/src/backend/jack/soloud_jack.cpp
+    Source/soloud/src/backend/miniaudio/soloud_miniaudio.cpp
+    Source/soloud/src/backend/openal/soloud_openal.cpp
     Source/soloud/src/backend/opensles/soloud_opensles.cpp
     Source/soloud/src/backend/oss/soloud_oss.cpp
+    Source/soloud/src/backend/portaudio/soloud_portaudio.cpp
+    Source/soloud/src/backend/sdl/soloud_sdl2.cpp
+    Source/soloud/src/backend/sdl/soloud_sdl2_dll.c
     Source/soloud/src/backend/wasapi/soloud_wasapi.cpp
     Source/soloud/src/backend/xaudio2/soloud_xaudio2.cpp
     Source/soloud/src/backend/winmm/soloud_winmm.cpp
@@ -100,8 +106,14 @@ set(SKIP_UNITY_BUILD_INCLUSION_FILES
     Source/soloud/src/audiosource/wav/dr_impl.cpp
     Source/soloud/src/backend/alsa/soloud_alsa.cpp
     Source/soloud/src/backend/coreaudio/soloud_coreaudio.cpp
+    Source/soloud/src/backend/jack/soloud_jack.cpp
+    Source/soloud/src/backend/miniaudio/soloud_miniaudio.cpp
+    Source/soloud/src/backend/openal/soloud_openal.cpp
     Source/soloud/src/backend/opensles/soloud_opensles.cpp
     Source/soloud/src/backend/oss/soloud_oss.cpp
+    Source/soloud/src/backend/portaudio/soloud_portaudio.cpp
+    Source/soloud/src/backend/sdl/soloud_sdl2.cpp
+    Source/soloud/src/backend/sdl/soloud_sdl2_dll.c
     Source/soloud/src/backend/wasapi/soloud_wasapi.cpp
     Source/soloud/src/backend/xaudio2/soloud_xaudio2.cpp
     Source/soloud/src/backend/winmm/soloud_winmm.cpp
