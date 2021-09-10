@@ -6,13 +6,10 @@
 #
 #
 
-find_package(SDL2 REQUIRED)
-target_include_directories(SoLoud.Static PRIVATE ${SDL2_INCLUDE_DIRS})
+find_package(SDL2)
+if (SDL2_FOUND)
+    target_include_directories(SoLoud.Static PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_compile_definitions(SoLoud.Static PRIVATE WITH_SDL2)
+endif()
 
-set(SOLOUD_COMPILE_DEFINITIONS_PRIVATE
-#    WITH_ALSA
-#    WITH_OSS
-    WITH_SDL2
-)
-target_compile_definitions(SoLoud.Static PRIVATE ${SOLOUD_COMPILE_DEFINITIONS_PRIVATE})
-
+target_compile_definitions(SoLoud.Static PRIVATE WITH_MINIAUDIO)
