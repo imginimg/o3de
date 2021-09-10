@@ -163,6 +163,9 @@ namespace Audio
         filterCreated = RegisterFilter<SoLoud::EchoFilter>(AZ::Name("Echo filter"));
         AZ_Error(LogWindow, filterCreated, errorMessage);
 
+        filterCreated = RegisterFilter<SoLoud::EqFilter>(AZ::Name("Equalizer filter"));
+        AZ_Error(LogWindow, filterCreated, errorMessage);
+
         filterCreated = RegisterFilter<SoLoud::FlangerFilter>(AZ::Name("Flanger filter"));
         AZ_Error(LogWindow, filterCreated, errorMessage);
 
