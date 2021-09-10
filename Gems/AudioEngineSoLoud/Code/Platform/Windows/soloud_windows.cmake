@@ -6,10 +6,4 @@
 #
 #
 
-set(SOLOUD_COMPILE_DEFINITIONS_PRIVATE
-    WITH_WINMM
-    WITH_WASAPI
-    WITH_XAUDIO2
-)
-target_compile_definitions(SoLoud.Static PRIVATE ${SOLOUD_COMPILE_DEFINITIONS_PRIVATE})
-
+target_compile_definitions(SoLoud.Static PRIVATE WITH_MINIAUDIO)
