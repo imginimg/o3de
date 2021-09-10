@@ -18,8 +18,7 @@ namespace Audio
     {
         if (auto behaviorContext = azrtti_cast<AZ::BehaviorContext*>(context))
         {
-            behaviorContext->EBus<AudioEngineSoLoudRequestBus>("Audio Engine SoLoud Request Bus")
-                ->Attribute(AZ::Edit::Attributes::Category, "Audio")
+            behaviorContext->EBus<AudioEngineSoLoudRequestBus>("AudioEngineSoLoudRequestBus")
                 ->Event("LoadAudioBusLayout", &AudioEngineSoLoudRequestBus::Events::LoadAudioBusLayout)
                 ->Event("SetAudioBusVolumeDb", &AudioEngineSoLoudRequestBus::Events::SetAudioBusVolumeDb)
                 ->Event("SetAudioBusVolumeLinear", &AudioEngineSoLoudRequestBus::Events::SetAudioBusVolumeLinear)

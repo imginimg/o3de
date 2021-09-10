@@ -6,23 +6,26 @@
  *
  */
 
+#include <AudioBusManagerWindow.h>
 #include <AudioFileToRtpcParamsWidget.h>
 #include <AudioFileToTriggerParamsWidget.h>
 #include <AudioSystemEditor_SoLoud.h>
-#include <EditorEngineInterop.h>
-#include <AudioBusManagerWindow.h>
 #include <Config.h>
-#include <Util.h>
+#include <EditorEngineInterop.h>
 #include <PropertyLayoutFilePathCtrl.h>
+#include <Util.h>
 
 #include <AudioConnections.h>
 #include <AudioFileUtils.h>
+#include <AzCore/IO/FileIO.h>
 #include <AzCore/StringFunc/StringFunc.h>
 #include <AzCore/Utils/Utils.h>
 #include <AzCore/std/smart_ptr/make_shared.h>
 #include <AzCore/std/string/conversions.h>
 #include <IAudioSystem.h>
 #include <QtViewPaneManager.h>
+
+#include <QTranslator>
 
 namespace AudioControls
 {
@@ -46,6 +49,13 @@ namespace AudioControls
 
         RegisterQtViewPane<AudioBusManagerWindow>(nullptr, "SoLoud Audio Bus Manager", LyViewPane::CategoryOther);
         RegisterLayoutFilePathHandler();
+
+        QTranslator* translator = new QTranslator(this);
+        QString qmFilePath =
+            QString("%1%2").arg(AZ::IO::FileIOBase::GetInstance()->GetAlias("@assets@")).arg(Audio::ScriptCanvasTextFilePath);
+        AZ_Warning(
+            Audio::LogWindow, translator->load(qmFilePath) && QApplication::instance()->installTranslator(translator),
+            "Unable to load '%s'.", Audio::ScriptCanvasTextFilePath); 
 
         startTimer(NotificationsProcessingIntervalMs);
     }

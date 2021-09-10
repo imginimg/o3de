@@ -20,6 +20,8 @@ namespace Audio
     constexpr const char* LocalizationDirName = "localization";
     constexpr const char* AudioFileFormatsArray[] = { "wav", "mp3", "ogg", "flac" };
 
+    constexpr const char* ScriptCanvasTextFilePath = "/editor/audioenginesoloud_scriptcanvas";
+
     constexpr const char* BusLayoutFileExt = "bus_layout";
     constexpr const char* MasterBusName = "Master";
     constexpr int32_t NumberOfFiltersPerBus = 8; // Should be less than or equal to soloud.h/FILTERS_PER_STREAM.
