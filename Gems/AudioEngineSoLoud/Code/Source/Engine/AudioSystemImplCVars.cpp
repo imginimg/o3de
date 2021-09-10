@@ -25,7 +25,7 @@ namespace Audio::CVars
         1,
         nullptr,
         AZ::ConsoleFunctorFlags::Null,
-        "The clipping mode used by the SoLoud audio integration.\n"
+        "The clipping mode used by SoLoud.\n"
         "Valid values: 0 - \"hard\" clipping to -1/+1, 1 - roundoff clipper\n");
 
     AZ_CVAR(
@@ -34,15 +34,15 @@ namespace Audio::CVars
         0.95f,
         nullptr,
         AZ::ConsoleFunctorFlags::Null,
-        "The post-clip scaler used by the SoLoud audio integration.\n");
+        "The post-clip scaler used by SoLoud.\n");
 
     AZ_CVAR(
         uint32_t,
         s_SoLoud_SampleRate,
-        44100,
+        48000,
         nullptr,
         AZ::ConsoleFunctorFlags::Null,
-        "The sample rate used by the SoLoud audio integration.\n");
+        "The sample rate used by SoLoud.\n");
 
     AZ_CVAR(
         uint32_t,
@@ -59,7 +59,7 @@ namespace Audio::CVars
         1,
         nullptr,
         AZ::ConsoleFunctorFlags::Null,
-        "The main resampler used by the SoLoud audio integration.\n"
+        "The main resampler used by SoLoud.\n"
         "Valid values: 0 - Point, 1 - Linear, 2 - Catmull-Rom.\n");
 
     AZ_CVAR(
@@ -72,18 +72,42 @@ namespace Audio::CVars
         "Valid values between 1 and 1023 inclusive.\n");
 
     AZ_CVAR(
+        uint32_t,
+        s_SoLoud_BufferSize,
+        2048,
+        nullptr,
+        AZ::ConsoleFunctorFlags::Null,
+        "The current buffer size used by SoLoud.\n");
+
+    AZ_CVAR(
         AZStd::string,
-        s_SoLoud_CurrentBackend,
+        s_SoLoud_Backend,
         "",
         nullptr,
         AZ::ConsoleFunctorFlags::ReadOnly,
-        "The current backend used by the SoLoud audio integration.\n");
+        "The current backend used by SoLoud.\n");
 
     AZ_CVAR(
         uint32_t,
-        s_SoLoud_CurrentNumberOfChannels,
+        s_SoLoud_BackendSampleRate,
+        0,
+        nullptr,
+        AZ::ConsoleFunctorFlags::ReadOnly,
+        "The sample rate used by the SoLoud backend.\n");
+
+    AZ_CVAR(
+        uint32_t,
+        s_SoLoud_BackendNumberOfChannels,
         0,
         nullptr,
         AZ::ConsoleFunctorFlags::ReadOnly,
         "The current number of channels used by the SoLoud backend.\n");
+
+    AZ_CVAR(
+        uint32_t,
+        s_SoLoud_BackendBufferSize,
+        0,
+        nullptr,
+        AZ::ConsoleFunctorFlags::ReadOnly,
+        "The current buffer size used by the SoLoud backend.\n");
 } // namespace Audio::CVars

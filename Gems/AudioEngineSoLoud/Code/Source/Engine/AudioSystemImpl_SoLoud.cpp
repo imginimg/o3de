@@ -78,7 +78,7 @@ namespace Audio
         const uint32_t channelCount =
             SpeakerConfiguration::ToChannelCount((SpeakerConfiguration::Type)(uint32_t)CVars::s_SoLoud_SpeakerConfiguration);
 
-        auto result = m_soloud.init(initFlags, SoLoud::Soloud::AUTO, CVars::s_SoLoud_SampleRate, SoLoud::Soloud::AUTO, channelCount);
+        auto result = m_soloud.init(initFlags, SoLoud::Soloud::AUTO, CVars::s_SoLoud_SampleRate, CVars::s_SoLoud_BufferSize, channelCount);
         if (result != SoLoud::SO_NO_ERROR)
         {
             AZ_Error(LogWindow, false, "Unable to init SoLoud! %s", m_soloud.getErrorString(result));
@@ -89,9 +89,10 @@ namespace Audio
         m_soloud.setMaxActiveVoiceCount(CVars::s_SoLoud_MaxActiveVoiceCount);
         m_soloud.setPostClipScaler(CVars::s_SoLoud_PostClipScaler);
 
-        CVars::s_SoLoud_CurrentBackend = m_soloud.getBackendString();
-        CVars::s_SoLoud_CurrentNumberOfChannels = m_soloud.getBackendChannels();
-        CVars::s_SoLoud_SampleRate = m_soloud.getBackendSamplerate();
+        CVars::s_SoLoud_Backend = m_soloud.getBackendString();
+        CVars::s_SoLoud_BackendNumberOfChannels = m_soloud.getBackendChannels();
+        CVars::s_SoLoud_BackendSampleRate = m_soloud.getBackendSamplerate();
+        CVars::s_SoLoud_BackendBufferSize = m_soloud.getBackendBufferSize();
         m_globalVolume = m_soloud.getGlobalVolume();
 
         m_audioFilterManager.Reset();
