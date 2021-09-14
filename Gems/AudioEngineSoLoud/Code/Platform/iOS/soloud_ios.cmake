@@ -6,8 +6,10 @@
 #
 #
 
-set(SOLOUD_COMPILEDEFINITIONS
-    WITH_COREAUDIO
-)
+find_library(COREFOUNDATION_LIBRARY CoreFoundation REQUIRED)
+find_library(COREAUDIO_LIBRARY CoreAudio REQUIRED)
+find_library(AUDIOTOOLBOX_LIBRARY AudioToolbox REQUIRED)
+target_link_libraries(SoLoud.Static PRIVATE ${COREFOUNDATION_LIBRARY} ${COREAUDIO_LIBRARY} ${AUDIOTOOLBOX_LIBRARY})
 
-set(SOLOUD_COMPILE_FLAGS " ")
+#target_compile_definitions(SoLoud.Static PRIVATE WITH_MINIAUDIO MA_NO_RUNTIME_LINKING)
+target_compile_definitions(SoLoud.Static PRIVATE WITH_COREAUDIO)
