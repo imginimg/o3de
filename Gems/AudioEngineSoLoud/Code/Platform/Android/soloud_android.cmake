@@ -6,8 +6,4 @@
 #
 #
 
-set(SOLOUD_COMPILEDEFINITIONS
-    WITH_OPENSLES
-)
-
-set(SOLOUD_COMPILE_FLAGS " ")
+target_compile_definitions(SoLoud.Static PRIVATE WITH_MINIAUDIO)
