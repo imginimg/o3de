@@ -6,6 +6,8 @@
 #
 #
 
+include(FetchContent)
+
 ly_get_list_relative_pal_filename(pal_dir ${CMAKE_CURRENT_LIST_DIR}/Platform/${PAL_PLATFORM_NAME})
 ly_get_list_relative_pal_filename(common_dir ${CMAKE_CURRENT_LIST_DIR}/Platform/Common)
 
@@ -41,6 +43,14 @@ endif()
 ################################################################################
 # Runtime / Game
 ################################################################################
+set(SOLOUD_GIT_REPOSITORY "https://github.com/imginimg/soloud-o3de.git" CACHE STRING "URL of the git repo SoLoud will be downloaded from by CMake FetchContent.")
+
+FetchContent_Declare(
+    soloud
+    GIT_REPOSITORY ${SOLOUD_GIT_REPOSITORY}
+)
+FetchContent_MakeAvailable(soloud)
+
 ly_add_target(
     NAME SoLoud.Static STATIC
     NAMESPACE Gem
@@ -48,9 +58,9 @@ ly_add_target(
         soloud_files.cmake
     INCLUDE_DIRECTORIES
         PRIVATE
-            Source/soloud
+            ${soloud_SOURCE_DIR}
         PUBLIC
-            Source/soloud/include
+            ${soloud_SOURCE_DIR}/include
 )
 include(${common_dir}/soloud_common.cmake)
 include(${pal_dir}/soloud_${PAL_PLATFORM_NAME_LOWERCASE}.cmake)
