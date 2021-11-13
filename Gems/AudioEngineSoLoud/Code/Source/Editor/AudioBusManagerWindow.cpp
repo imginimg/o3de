@@ -81,7 +81,8 @@ namespace AudioControls
                     continue;
                 }
 
-                bool widgetSelected = widget->GetBusName() != AZ::Name(Audio::MasterBusName) && widget->geometry().contains(event->pos());
+                QPoint cursorPos = m_busWidgetsScrollArea->widget()->mapFromGlobal(event->globalPos());
+                bool widgetSelected = widget->GetBusName() != AZ::Name(Audio::MasterBusName) && widget->geometry().contains(cursorPos);
                 widget->SetSelected(widgetSelected);
 
                 if (widgetSelected)
