@@ -9,6 +9,7 @@
 #include <BusData.h>
 #include <Config.h>
 
+#include <AzCore/Component/ComponentApplicationBus.h>
 #include <AzCore/Serialization/Json/JsonSerialization.h>
 #include <AzCore/Serialization/Json/JsonUtils.h>
 #include <AzCore/StringFunc/StringFunc.h>
