@@ -80,6 +80,14 @@ namespace Audio::CVars
         "The current buffer size used by SoLoud.\n");
 
     AZ_CVAR(
+        bool,
+        s_SoLoud_PauseAudioOnFocusLost,
+        true,
+        nullptr,
+        AZ::ConsoleFunctorFlags::Null,
+        "Whether to pause audio or not when the application loses focus.");
+
+    AZ_CVAR(
         AZStd::string,
         s_SoLoud_Backend,
         "",

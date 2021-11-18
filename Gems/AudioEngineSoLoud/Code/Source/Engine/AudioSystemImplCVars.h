@@ -20,6 +20,7 @@ namespace Audio::CVars
     AZ_CVAR_EXTERNED(uint32_t, s_SoLoud_MainResampler);
     AZ_CVAR_EXTERNED(uint32_t, s_SoLoud_MaxActiveVoiceCount);
     AZ_CVAR_EXTERNED(uint32_t, s_SoLoud_BufferSize);
+    AZ_CVAR_EXTERNED(bool, s_SoLoud_PauseAudioOnFocusLost);
 
     AZ_CVAR_EXTERNED(AZStd::string, s_SoLoud_Backend);
     AZ_CVAR_EXTERNED(uint32_t, s_SoLoud_BackendSampleRate);

@@ -34,12 +34,18 @@ namespace Audio
 
     void AudioSystemImpl_SoLoud::OnAudioSystemLoseFocus()
     {
-        m_soloud.setPauseAll(true);
+        if (Audio::CVars::s_SoLoud_PauseAudioOnFocusLost)
+        {
+            m_soloud.setPauseAll(true);
+        }
     }
 
     void AudioSystemImpl_SoLoud::OnAudioSystemGetFocus()
     {
-        m_soloud.setPauseAll(false);
+        if (Audio::CVars::s_SoLoud_PauseAudioOnFocusLost)
+        {
+            m_soloud.setPauseAll(false);
+        }
     }
 
     void AudioSystemImpl_SoLoud::OnAudioSystemMuteAll()
